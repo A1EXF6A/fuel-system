@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      SA_PASSWORD: "Your_password123"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    networks:
+      - fuel-net
+
+  authservice:
+    image: authservice-grpc-http2:latest
+    container_name: authservice
+    depends_on:
+      - sqlserver
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:5000"
+    networks:
+      - fuel-net
+
+networks:
+  fuel-net:
+    driver: bridge
