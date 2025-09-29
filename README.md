@@ -173,7 +173,7 @@ grpcurl -plaintext localhost:5000 list Auth
 
 # Login con usuario admin
 grpcurl -plaintext -d '{"username":"admin","password":"admin123"}' localhost:5000 Auth/Login
-
+grpcurl -plaintext -d '{\"username\":\"admin\",\"password\":\"admin123\"}' localhost:5000 Auth/Login
 # Registrar nuevo usuario
 grpcurl -plaintext -d '{"username":"newuser","password":"password123","role":"Operador"}' localhost:5000 Auth/Register
 ```

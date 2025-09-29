@@ -23,6 +23,21 @@ services:
     networks:
       - fuel-net
 
+  driversservice:
+    build:
+      context: ./XYZ.DriversService
+      dockerfile: Dockerfile
+    container_name: driversservice
+    depends_on:
+      - sqlserver
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=XYZ_DriversDB;User Id=sa;Password=Your_password123;TrustServerCertificate=true;
+    ports:
+      - "5002:80"
+    networks:
+      - fuel-net
+
 networks:
   fuel-net:
     driver: bridge
