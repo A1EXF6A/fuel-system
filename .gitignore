@@ -3,6 +3,8 @@ bin/
 obj/
 out/
 TestResults/
+fuel-system-ui/
+XYZ.ApiGateway/
 
 # Build results
 [Dd]ebug/
