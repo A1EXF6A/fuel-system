@@ -1,17 +1,19 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 option csharp_namespace = "XYZ.DriversService.Protos";
 
 package drivers;
 
 // Servicio de Choferes
 service Drivers {
-  rpc CreateDriver(CreateDriverRequest) returns (DriverResponse);
-  rpc GetDriver(GetDriverRequest) returns (DriverResponse);
+  rpc CreateDriver(CreateDriverRequest) returns (CreateDriverResponse);
+  rpc GetDriver(GetDriverRequest) returns (GetDriverResponse);
   rpc GetAllDrivers(GetAllDriversRequest) returns (GetAllDriversResponse);
-  rpc UpdateDriver(UpdateDriverRequest) returns (DriverResponse);
+  rpc UpdateDriver(UpdateDriverRequest) returns (UpdateDriverResponse);
   rpc DeleteDriver(DeleteDriverRequest) returns (DeleteDriverResponse);
-  rpc GetAvailableDrivers(GetAvailableDriversRequest) returns (GetAllDriversResponse);
+  rpc GetAvailableDrivers(GetAvailableDriversRequest) returns (GetAvailableDriversResponse);
   rpc AssignDriver(AssignDriverRequest) returns (AssignDriverResponse);
   rpc UnassignDriver(UnassignDriverRequest) returns (UnassignDriverResponse);
 }
@@ -20,12 +22,14 @@ service Drivers {
 message CreateDriverRequest {
   string first_name = 1;
   string last_name = 2;
-  string license_number = 3;
-  int32 license_category = 4; // LicenseCategory enum
-  int32 driver_type = 5; // DriverType enum
-  string phone = 6;
-  string email = 7;
-  string address = 8;
+  string document_number = 3;
+  string phone_number = 4;
+  string email = 5;
+  string license_number = 6;
+  int32 license_category = 7; // LicenseCategory enum
+  google.protobuf.Timestamp license_expiry_date = 8;
+  int32 driver_type = 9; // DriverType enum
+  google.protobuf.Timestamp hire_date = 10;
 }
 
 message GetDriverRequest {
@@ -33,22 +37,18 @@ message GetDriverRequest {
 }
 
 message GetAllDriversRequest {
-  int32 page = 1;
-  int32 page_size = 2;
-  int32 driver_type = 3; // Filtro opcional
-  bool available_only = 4;
 }
 
 message UpdateDriverRequest {
   int32 id = 1;
   string first_name = 2;
   string last_name = 3;
-  string license_number = 4;
-  int32 license_category = 5;
-  int32 driver_type = 6;
-  string phone = 7;
-  string email = 8;
-  string address = 9;
+  string phone_number = 4;
+  string email = 5;
+  string license_number = 6;
+  int32 license_category = 7;
+  google.protobuf.Timestamp license_expiry_date = 8;
+  int32 driver_type = 9;
   int32 status = 10;
 }
 
@@ -57,15 +57,11 @@ message DeleteDriverRequest {
 }
 
 message GetAvailableDriversRequest {
-  int32 driver_type = 1; // Filtro por tipo
-  int32 page = 2;
-  int32 page_size = 3;
 }
 
 message AssignDriverRequest {
   int32 driver_id = 1;
-  int32 vehicle_id = 2;
-  int32 route_id = 3;
+  string vehicle_id = 2;
 }
 
 message UnassignDriverRequest {
@@ -73,19 +69,28 @@ message UnassignDriverRequest {
 }
 
 // Mensajes de Response
-message DriverResponse {
+message CreateDriverResponse {
   bool success = 1;
   string message = 2;
-  DriverDto driver = 3;
+  Driver driver = 3;
+}
+
+message GetDriverResponse {
+  Driver driver = 1;
+}
+
+message UpdateDriverResponse {
+  bool success = 1;
+  string message = 2;
+  Driver driver = 3;
+}
+
+message GetAvailableDriversResponse {
+  repeated Driver drivers = 1;
 }
 
 message GetAllDriversResponse {
-  bool success = 1;
-  string message = 2;
-  repeated DriverDto drivers = 3;
-  int32 total_count = 4;
-  int32 page = 5;
-  int32 page_size = 6;
+  repeated Driver drivers = 1;
 }
 
 message DeleteDriverResponse {
@@ -104,24 +109,22 @@ message UnassignDriverResponse {
 }
 
 // DTOs
-message DriverDto {
+message Driver {
   int32 id = 1;
   string first_name = 2;
   string last_name = 3;
-  string full_name = 4;
-  string license_number = 5;
-  int32 license_category = 6;
-  string license_category_name = 7;
-  int32 driver_type = 8;
-  string driver_type_name = 9;
-  string phone = 10;
-  string email = 11;
-  string address = 12;
-  int32 status = 13;
-  string status_name = 14;
-  bool is_available = 15;
-  int32 current_vehicle_id = 16;
-  int32 current_route_id = 17;
-  string created_at = 18;
-  string updated_at = 19;
+  string document_number = 4;
+  string phone_number = 5;
+  string email = 6;
+  string license_number = 7;
+  int32 license_category = 8;
+  google.protobuf.Timestamp license_expiry_date = 9;
+  int32 driver_type = 10;
+  int32 status = 11;
+  google.protobuf.Timestamp hire_date = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+  bool is_assigned = 15;
+  string assigned_vehicle_id = 16;
+  google.protobuf.Timestamp assignment_date = 17;
 }

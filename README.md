@@ -40,9 +40,9 @@ Cada microservicio sigue una arquitectura en capas:
 
 ### ✅ Completado
 - **XYZ.AuthService** - Servicio de Autenticación y Autorización
+- **XYZ.DriversService** - Gestión de choferes
 
 ### ⏳ Pendiente
-- **XYZ.DriversService** - Gestión de choferes
 - **XYZ.VehiclesService** - Gestión de vehículos 
 - **XYZ.RoutesService** - Gestión de rutas
 - **XYZ.FuelService** - Gestión de consumo de combustible
@@ -80,14 +80,54 @@ Cada microservicio sigue una arquitectura en capas:
 - `Auth/RefreshToken` - Renovación de tokens
 
 #### Roles del sistema:
-- `Admin` - Administrador del sistema
-- `Operador` - Usuario operador
-- `Supervisor` - Usuario supervisor
+- `Admin` - Administrador del sistema (acceso completo)
+- `Operador` - Usuario operador (acceso limitado)
+- `Supervisor` - Usuario supervisor (acceso limitado)
 
-#### Usuario predeterminado:
-- **Username**: `admin`
-- **Password**: `admin123`
-- **Role**: `Admin`
+#### Usuarios de prueba:
+- **Admin**: `testuser` / `test123` (acceso completo)
+- **Operador**: `operador1` / `oper123` (sin acceso a drivers)
+- **Supervisor**: `supervisor1` / `super123` (sin acceso a drivers)
+
+#### Control de Acceso:
+- **Servicio de Drivers**: Solo usuarios con rol `Admin` pueden acceder
+- **Autenticación**: Todos los roles pueden hacer login
+- **Frontend**: Maneja errores 403 para usuarios sin permisos
+
+### DriversService
+**Puerto**: `5002`  
+**Protocolo**: gRPC (HTTP/2)  
+**Base de datos**: `XYZ_DriversDB`
+
+#### Endpoints disponibles:
+- `drivers.Drivers/CreateDriver` - Crear nuevo chofer ⚠️ **Solo Admin**
+- `drivers.Drivers/GetDriver` - Obtener chofer por ID ⚠️ **Solo Admin**
+- `drivers.Drivers/GetAllDrivers` - Listar todos los choferes ⚠️ **Solo Admin**
+- `drivers.Drivers/UpdateDriver` - Actualizar datos del chofer ⚠️ **Solo Admin**
+- `drivers.Drivers/DeleteDriver` - Eliminar chofer ⚠️ **Solo Admin**
+- `drivers.Drivers/GetAvailableDrivers` - Obtener choferes disponibles ⚠️ **Solo Admin**
+- `drivers.Drivers/AssignDriver` - Asignar chofer a vehículo ⚠️ **Solo Admin**
+- `drivers.Drivers/UnassignDriver` - Desasignar chofer ⚠️ **Solo Admin**
+
+#### Tipos de chofer:
+- `LightMachinery` (1) - Maquinaria ligera
+- `HeavyMachinery` (2) - Maquinaria pesada
+
+#### Categorías de licencia:
+- `A` (1) - Motocicleta
+- `B` (2) - Automóvil
+- `C` (3) - Camión
+- `D` (4) - Transporte de pasajeros
+- `E` (5) - Maquinaria pesada especial
+
+#### Estados del chofer:
+- `Active` (1) - Activo
+- `Inactive` (2) - Inactivo
+- `OnLeave` (3) - De licencia
+- `Suspended` (4) - Suspendido
+
+#### Datos iniciales:
+- **3 choferes de ejemplo** ya cargados en la base de datos
 
 ## 🚀 Instalación y Despliegue
 
@@ -164,19 +204,38 @@ El servicio estará disponible en `http://localhost:5000`
 ## 🧪 Testing
 
 ### Usando grpcurl
+
+#### AuthService (Puerto 5000)
 ```bash
 # Listar servicios disponibles
 grpcurl -plaintext localhost:5000 list
 
-# Listar métodos del servicio Auth
-grpcurl -plaintext localhost:5000 list Auth
-
 # Login con usuario admin
 grpcurl -plaintext -d '{"username":"admin","password":"admin123"}' localhost:5000 Auth/Login
-grpcurl -plaintext -d '{\"username\":\"admin\",\"password\":\"admin123\"}' localhost:5000 Auth/Login
+
 # Registrar nuevo usuario
 grpcurl -plaintext -d '{"username":"newuser","password":"password123","role":"Operador"}' localhost:5000 Auth/Register
 ```
+
+#### DriversService (Puerto 5002)
+```bash
+# Listar servicios disponibles
+grpcurl -plaintext localhost:5002 list
+
+# Obtener todos los choferes
+grpcurl -plaintext -d '{}' localhost:5002 drivers.Drivers/GetAllDrivers
+
+# Obtener chofer por ID
+grpcurl -plaintext -d '{"id":1}' localhost:5002 drivers.Drivers/GetDriver
+
+# Crear nuevo chofer
+grpcurl -plaintext -d '{"first_name":"Test","last_name":"Driver","document_number":"99999999","phone_number":"+1234567899","email":"test@company.com","license_number":"LIC999","license_category":2,"license_expiry_date":"2027-12-31T00:00:00Z","driver_type":1,"hire_date":"2024-01-01T00:00:00Z"}' localhost:5002 drivers.Drivers/CreateDriver
+
+# Asignar chofer a vehículo
+grpcurl -plaintext -d '{"driver_id":1,"vehicle_id":"VEH001"}' localhost:5002 drivers.Drivers/AssignDriver
+```
+
+> **Nota para Windows**: Si grpcurl no se reconoce, instálalo desde [GitHub Releases](https://github.com/fullstorydev/grpcurl/releases) y agrégalo al PATH del sistema.
 
 ### Usando Postman
 1. Crear nueva **gRPC Request**
@@ -212,15 +271,21 @@ environment:
 }
 ```
 
-## 🔄 Próximos Pasos
+## � Documentación de Pruebas
+
+Para guías detalladas de testing:
+- **AuthService**: Ver ejemplos en la sección Testing arriba
+- **DriversService**: Ver `DRIVERS_SERVICE_TESTING.md` para comandos completos
+
+## �🔄 Próximos Pasos
 
 ### Funcionalidades Planificadas
 
-#### DriversService
-- [ ] Registrar choferes
-- [ ] Consultar disponibilidad  
-- [ ] Asignar choferes por tipo de maquinaria
-- [ ] Gestión de licencias
+#### DriversService ✅ COMPLETADO
+- [x] Registrar choferes
+- [x] Consultar disponibilidad  
+- [x] Asignar choferes por tipo de maquinaria
+- [x] Gestión de licencias
 
 #### VehiclesService
 - [ ] Clasificación liviano/pesado
@@ -247,8 +312,21 @@ fuel-system/
 ├── docker-compose.yml              # Orquestación de servicios
 ├── .gitignore                     # Archivos ignorados por Git
 ├── README.md                      # Este archivo
+├── DRIVERS_SERVICE_TESTING.md     # Guía de pruebas DriversService
 │
-└── XYZ.AuthService/               # Servicio de Autenticación
+├── XYZ.AuthService/               # Servicio de Autenticación
+│   ├── Application/               # Lógica de negocio
+│   ├── Controllers/               # Controladores gRPC
+│   ├── Domain/                   # Entidades y enums
+│   ├── Infrastructure/           # Acceso a datos
+│   ├── Migrations/              # Migraciones EF
+│   ├── Protos/                  # Protocol Buffers
+│   ├── Shared/                  # DTOs compartidos
+│   ├── Program.cs               # Punto de entrada
+│   ├── Dockerfile              # Imagen Docker
+│   └── *.csproj                # Configuración del proyecto
+│
+└── XYZ.DriversService/            # Servicio de Choferes
     ├── Application/               # Lógica de negocio
     ├── Controllers/               # Controladores gRPC
     ├── Domain/                   # Entidades y enums

@@ -12,12 +12,15 @@ services:
       - fuel-net
 
   authservice:
-    image: authservice-grpc-http2:latest
+    build:
+      context: ./XYZ.AuthService
+      dockerfile: Dockerfile
     container_name: authservice
     depends_on:
       - sqlserver
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=XYZ_AuthDB;User Id=sa;Password=Your_password123;TrustServerCertificate=true;
     ports:
       - "5000:5000"
     networks:
@@ -37,6 +40,7 @@ services:
       - "5002:80"
     networks:
       - fuel-net
+
 
 networks:
   fuel-net:

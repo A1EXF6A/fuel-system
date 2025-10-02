@@ -43,6 +43,12 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ConfigureEndpointDefaults(lo => lo.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
 });
 
+// Configure URLs for Docker
+if (builder.Environment.EnvironmentName == "Development")
+{
+    builder.WebHost.UseUrls("http://0.0.0.0:80");
+}
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -62,8 +68,8 @@ using (var scope = app.Services.CreateScope())
     
     try
     {
-        Log.Information("Applying database migrations...");
-        await context.Database.MigrateAsync();
+        Log.Information("Ensuring database exists...");
+        await context.Database.EnsureCreatedAsync();
         
         Log.Information("Seeding database...");
         await SeedData.SeedAsync(context);
