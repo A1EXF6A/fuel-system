@@ -21,4 +21,8 @@ public class DriverResponseDto
     public bool IsAssigned { get; set; }
     public string? AssignedVehicleId { get; set; }
     public DateTime? AssignmentDate { get; set; }
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
+    public string? DeletionReason { get; set; }
 }

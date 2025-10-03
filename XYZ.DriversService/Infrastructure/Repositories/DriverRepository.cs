@@ -93,9 +93,67 @@ public class DriverRepository
         return driver;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> SoftDeleteAsync(int id, string deletedBy, string? reason = null)
     {
         var driver = await GetByIdAsync(id);
+        if (driver == null)
+            return false;
+
+        driver.IsDeleted = true;
+        driver.DeletedAt = DateTime.UtcNow;
+        driver.DeletedBy = deletedBy;
+        driver.DeletionReason = reason;
+        driver.UpdatedAt = DateTime.UtcNow;
+
+        _context.Drivers.Update(driver);
+        await _context.SaveChangesAsync();
+        
+        return true;
+    }
+
+    public async Task<bool> RestoreAsync(int id)
+    {
+        var driver = await _context.Drivers
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted);
+        
+        if (driver == null)
+            return false;
+
+        driver.IsDeleted = false;
+        driver.DeletedAt = null;
+        driver.DeletedBy = null;
+        driver.DeletionReason = null;
+        driver.UpdatedAt = DateTime.UtcNow;
+
+        _context.Drivers.Update(driver);
+        await _context.SaveChangesAsync();
+        
+        return true;
+    }
+
+    public async Task<List<Driver>> GetDeletedAsync()
+    {
+        return await _context.Drivers
+            .IgnoreQueryFilters()
+            .Where(d => d.IsDeleted)
+            .OrderBy(d => d.DeletedAt)
+            .ToListAsync();
+    }
+
+    public async Task<Driver?> GetDeletedByIdAsync(int id)
+    {
+        return await _context.Drivers
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted);
+    }
+
+    public async Task<bool> HardDeleteAsync(int id)
+    {
+        var driver = await _context.Drivers
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.Id == id);
+        
         if (driver == null)
             return false;
 

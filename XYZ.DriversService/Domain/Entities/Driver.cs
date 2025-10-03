@@ -45,6 +45,12 @@ public class Driver
     
     public DateTime UpdatedAt { get; set; }
     
+    // Soft Delete Properties
+    public bool IsDeleted { get; set; } = false;
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
+    public string? DeletionReason { get; set; }
+    
     // Navigation properties for assignments (future use)
     public bool IsAssigned { get; set; } = false;
     

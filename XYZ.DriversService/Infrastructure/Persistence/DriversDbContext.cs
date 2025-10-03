@@ -68,6 +68,24 @@ public class DriversDbContext : DbContext
             entity.Property(e => e.IsAssigned)
                 .HasDefaultValue(false);
 
+            // Soft Delete Properties
+            entity.Property(e => e.IsDeleted)
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.DeletedAt)
+                .IsRequired(false);
+
+            entity.Property(e => e.DeletedBy)
+                .HasMaxLength(100)
+                .IsRequired(false);
+
+            entity.Property(e => e.DeletionReason)
+                .HasMaxLength(500)
+                .IsRequired(false);
+
+            // Global query filter for soft delete
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
             // Unique constraints
             entity.HasIndex(e => e.DocumentNumber)
                 .IsUnique();

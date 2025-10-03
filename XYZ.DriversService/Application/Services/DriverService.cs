@@ -106,7 +106,7 @@ public class DriverService : IDriverService
         return MapToDto(updatedDriver);
     }
 
-    public async Task<bool> DeleteDriverAsync(int id)
+    public async Task<bool> DeleteDriverAsync(int id, string deletedBy, string? reason = null)
     {
         var driver = await _driverRepository.GetByIdAsync(id);
         if (driver == null)
@@ -116,7 +116,29 @@ public class DriverService : IDriverService
         if (driver.IsAssigned)
             throw new InvalidOperationException("Cannot delete an assigned driver. Please unassign first.");
 
-        return await _driverRepository.DeleteAsync(id);
+        return await _driverRepository.SoftDeleteAsync(id, deletedBy, reason);
+    }
+
+    public async Task<bool> RestoreDriverAsync(int id)
+    {
+        return await _driverRepository.RestoreAsync(id);
+    }
+
+    public async Task<List<DriverResponseDto>> GetDeletedDriversAsync()
+    {
+        var drivers = await _driverRepository.GetDeletedAsync();
+        return drivers.Select(MapToDto).ToList();
+    }
+
+    public async Task<DriverResponseDto?> GetDeletedDriverByIdAsync(int id)
+    {
+        var driver = await _driverRepository.GetDeletedByIdAsync(id);
+        return driver != null ? MapToDto(driver) : null;
+    }
+
+    public async Task<bool> HardDeleteDriverAsync(int id)
+    {
+        return await _driverRepository.HardDeleteAsync(id);
     }
 
     public async Task<bool> AssignDriverAsync(int driverId, string vehicleId)
@@ -181,7 +203,11 @@ public class DriverService : IDriverService
             UpdatedAt = driver.UpdatedAt,
             IsAssigned = driver.IsAssigned,
             AssignedVehicleId = driver.AssignedVehicleId,
-            AssignmentDate = driver.AssignmentDate
+            AssignmentDate = driver.AssignmentDate,
+            IsDeleted = driver.IsDeleted,
+            DeletedAt = driver.DeletedAt,
+            DeletedBy = driver.DeletedBy,
+            DeletionReason = driver.DeletionReason
         };
     }
 }

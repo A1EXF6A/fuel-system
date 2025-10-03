@@ -158,9 +158,9 @@ public class DriversGrpcService : Drivers.DriversBase
     {
         try
         {
-            _logger.LogInformation("Deleting driver with ID: {DriverId}", request.Id);
+            _logger.LogInformation("Soft deleting driver with ID: {DriverId}", request.Id);
 
-            var success = await _driverService.DeleteDriverAsync(request.Id);
+            var success = await _driverService.DeleteDriverAsync(request.Id, request.DeletedBy, request.Reason);
 
             if (!success)
             {
@@ -299,6 +299,94 @@ public class DriversGrpcService : Drivers.DriversBase
             driver.AssignmentDate = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(dto.AssignmentDate.Value.ToUniversalTime());
         }
 
+        // Soft delete fields
+        driver.IsDeleted = dto.IsDeleted;
+        
+        if (dto.DeletedAt.HasValue)
+        {
+            driver.DeletedAt = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(dto.DeletedAt.Value.ToUniversalTime());
+        }
+        
+        if (!string.IsNullOrEmpty(dto.DeletedBy))
+        {
+            driver.DeletedBy = dto.DeletedBy;
+        }
+        
+        if (!string.IsNullOrEmpty(dto.DeletionReason))
+        {
+            driver.DeletionReason = dto.DeletionReason;
+        }
+
         return driver;
+    }
+
+    public override async Task<RestoreDriverResponse> RestoreDriver(RestoreDriverRequest request, ServerCallContext context)
+    {
+        try
+        {
+            _logger.LogInformation("Restoring driver with ID: {DriverId}", request.Id);
+
+            var success = await _driverService.RestoreDriverAsync(request.Id);
+
+            if (!success)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, $"Deleted driver with ID {request.Id} not found"));
+            }
+
+            return new RestoreDriverResponse
+            {
+                Success = true
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error restoring driver with ID: {DriverId}", request.Id);
+            throw new RpcException(new Status(StatusCode.Internal, "Internal server error"));
+        }
+    }
+
+    public override async Task<GetDeletedDriversResponse> GetDeletedDrivers(GetDeletedDriversRequest request, ServerCallContext context)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving all deleted drivers");
+
+            var drivers = await _driverService.GetDeletedDriversAsync();
+
+            var response = new GetDeletedDriversResponse();
+            response.Drivers.AddRange(drivers.Select(MapToProtoDriver));
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving deleted drivers");
+            throw new RpcException(new Status(StatusCode.Internal, "Internal server error"));
+        }
+    }
+
+    public override async Task<HardDeleteDriverResponse> HardDeleteDriver(HardDeleteDriverRequest request, ServerCallContext context)
+    {
+        try
+        {
+            _logger.LogInformation("Hard deleting driver with ID: {DriverId}", request.Id);
+
+            var success = await _driverService.HardDeleteDriverAsync(request.Id);
+
+            if (!success)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, $"Driver with ID {request.Id} not found"));
+            }
+
+            return new HardDeleteDriverResponse
+            {
+                Success = true
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error hard deleting driver with ID: {DriverId}", request.Id);
+            throw new RpcException(new Status(StatusCode.Internal, "Internal server error"));
+        }
     }
 }

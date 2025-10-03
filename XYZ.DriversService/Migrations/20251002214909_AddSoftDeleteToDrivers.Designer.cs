@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using XYZ.DriversService.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using XYZ.DriversService.Infrastructure.Persistence;
 namespace XYZ.DriversService.Migrations
 {
     [DbContext(typeof(DriversDbContext))]
-    partial class DriversDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251002214909_AddSoftDeleteToDrivers")]
+    partial class AddSoftDeleteToDrivers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
