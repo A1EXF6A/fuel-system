@@ -4,7 +4,10 @@ obj/
 out/
 TestResults/
 fuel-system-ui/
-XYZ.ApiGateway/
+XYZ.ApiGateway/Controllers/
+XYZ.ApiGateway/Protos/
+XYZ.ApiGateway/Services/
+XYZ.ApiGateway/XYZ.ApiGateway/
 
 # Build results
 [Dd]ebug/
