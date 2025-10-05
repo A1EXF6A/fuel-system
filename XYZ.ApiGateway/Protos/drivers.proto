@@ -1,0 +1,164 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "XYZ.DriversService.Protos";
+
+package drivers;
+
+// Servicio de Choferes
+service Drivers {
+  rpc CreateDriver(CreateDriverRequest) returns (CreateDriverResponse);
+  rpc GetDriver(GetDriverRequest) returns (GetDriverResponse);
+  rpc GetAllDrivers(GetAllDriversRequest) returns (GetAllDriversResponse);
+  rpc UpdateDriver(UpdateDriverRequest) returns (UpdateDriverResponse);
+  rpc DeleteDriver(DeleteDriverRequest) returns (DeleteDriverResponse);
+  rpc RestoreDriver(RestoreDriverRequest) returns (RestoreDriverResponse);
+  rpc GetDeletedDrivers(GetDeletedDriversRequest) returns (GetDeletedDriversResponse);
+  rpc HardDeleteDriver(HardDeleteDriverRequest) returns (HardDeleteDriverResponse);
+  rpc GetAvailableDrivers(GetAvailableDriversRequest) returns (GetAvailableDriversResponse);
+  rpc AssignDriver(AssignDriverRequest) returns (AssignDriverResponse);
+  rpc UnassignDriver(UnassignDriverRequest) returns (UnassignDriverResponse);
+}
+
+// Mensajes de Request
+message CreateDriverRequest {
+  string first_name = 1;
+  string last_name = 2;
+  string document_number = 3;
+  string phone_number = 4;
+  string email = 5;
+  string license_number = 6;
+  int32 license_category = 7; // LicenseCategory enum
+  google.protobuf.Timestamp license_expiry_date = 8;
+  int32 driver_type = 9; // DriverType enum
+  google.protobuf.Timestamp hire_date = 10;
+}
+
+message GetDriverRequest {
+  int32 id = 1;
+}
+
+message GetAllDriversRequest {
+}
+
+message UpdateDriverRequest {
+  int32 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string phone_number = 4;
+  string email = 5;
+  string license_number = 6;
+  int32 license_category = 7;
+  google.protobuf.Timestamp license_expiry_date = 8;
+  int32 driver_type = 9;
+  int32 status = 10;
+}
+
+message DeleteDriverRequest {
+  int32 id = 1;
+  string deleted_by = 2;
+  string reason = 3;
+}
+
+message RestoreDriverRequest {
+  int32 id = 1;
+}
+
+message GetDeletedDriversRequest {
+}
+
+message HardDeleteDriverRequest {
+  int32 id = 1;
+}
+
+message GetAvailableDriversRequest {
+}
+
+message AssignDriverRequest {
+  int32 driver_id = 1;
+  string vehicle_id = 2;
+}
+
+message UnassignDriverRequest {
+  int32 driver_id = 1;
+}
+
+// Mensajes de Response
+message CreateDriverResponse {
+  bool success = 1;
+  string message = 2;
+  Driver driver = 3;
+}
+
+message GetDriverResponse {
+  Driver driver = 1;
+}
+
+message UpdateDriverResponse {
+  bool success = 1;
+  string message = 2;
+  Driver driver = 3;
+}
+
+message GetAvailableDriversResponse {
+  repeated Driver drivers = 1;
+}
+
+message GetAllDriversResponse {
+  repeated Driver drivers = 1;
+}
+
+message DeleteDriverResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RestoreDriverResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetDeletedDriversResponse {
+  repeated Driver drivers = 1;
+}
+
+message HardDeleteDriverResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message AssignDriverResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UnassignDriverResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// DTOs
+message Driver {
+  int32 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string document_number = 4;
+  string phone_number = 5;
+  string email = 6;
+  string license_number = 7;
+  int32 license_category = 8;
+  google.protobuf.Timestamp license_expiry_date = 9;
+  int32 driver_type = 10;
+  int32 status = 11;
+  google.protobuf.Timestamp hire_date = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+  bool is_assigned = 15;
+  string assigned_vehicle_id = 16;
+  google.protobuf.Timestamp assignment_date = 17;
+  bool is_deleted = 18;
+  google.protobuf.Timestamp deleted_at = 19;
+  string deleted_by = 20;
+  string deletion_reason = 21;
+}
