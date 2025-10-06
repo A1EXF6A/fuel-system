@@ -37,7 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Register Gateway Services
+// Dependency Injection for Gateway Services
 builder.Services.AddScoped<AuthGatewayService>();
 builder.Services.AddScoped<DriversGatewayService>();
 
