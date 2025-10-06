@@ -22,7 +22,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Configure JWT Authentication
+// JWT Configuration
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "supersecretkeythatislongenoughforthejwttoken";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
