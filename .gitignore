@@ -4,7 +4,6 @@ obj/
 out/
 TestResults/
 fuel-system-ui/
-XYZ.ApiGateway/XYZ.ApiGateway/
 
 # Build results
 [Dd]ebug/
