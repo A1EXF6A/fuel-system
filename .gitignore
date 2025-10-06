@@ -5,7 +5,6 @@ out/
 TestResults/
 fuel-system-ui/
 XYZ.ApiGateway/Controllers/
-XYZ.ApiGateway/Services/
 XYZ.ApiGateway/XYZ.ApiGateway/
 
 # Build results
