@@ -1,4 +1,3 @@
-using System.Linq;
 using XYZ.AuthService.Domain.Entities;
 using XYZ.AuthService.Domain.Enums;
 using XYZ.AuthService.Infrastructure.Security;

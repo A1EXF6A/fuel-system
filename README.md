@@ -18,15 +18,18 @@ Sistema de gestión de combustible basado en microservicios para el manejo de ch
 ## 🏗️ Arquitectura del Sistema
 
 ### Estilo Arquitectónico
+
 - **Patrón**: Microservicios
 - **Comunicación**: gRPC + Protocol Buffers
-- **Bases de datos**: Independientes por servicio (SQL Server)
+- **Bases de datos**: Independientes por servicio (PostgreSQL)
 - **Despliegue**: Docker, preparado para Kubernetes
 - **Logging**: Serilog
 - **Seguridad**: JWT Tokens
 
 ### Capas por Servicio
+
 Cada microservicio sigue una arquitectura en capas:
+
 ```
 ├── Controllers/        # gRPC Controllers
 ├── Application/        # Lógica de negocio
@@ -39,17 +42,20 @@ Cada microservicio sigue una arquitectura en capas:
 ## 📊 Estado del Proyecto
 
 ### ✅ Completado
+
 - **XYZ.AuthService** - Servicio de Autenticación y Autorización
 
 ### ⏳ Pendiente
+
 - **XYZ.DriversService** - Gestión de choferes
-- **XYZ.VehiclesService** - Gestión de vehículos 
+- **XYZ.VehiclesService** - Gestión de vehículos
 - **XYZ.RoutesService** - Gestión de rutas
 - **XYZ.FuelService** - Gestión de consumo de combustible
 
 ## 🛠️ Tecnologías
 
 ### Backend
+
 - **.NET 8.0** - Framework principal
 - **gRPC** - Comunicación entre servicios
 - **Entity Framework Core** - ORM
@@ -58,33 +64,39 @@ Cada microservicio sigue una arquitectura en capas:
 - **JWT** - Autenticación y autorización
 
 ### DevOps
+
 - **Docker** - Containerización
 - **Docker Compose** - Orquestación local
 - **Git** - Control de versiones
 
 ### Testing
+
 - **grpcurl** - Testing de servicios gRPC
 - **Postman** - Testing de APIs (soporta gRPC)
 
 ## 🔐 Servicios Implementados
 
 ### AuthService
+
 **Puerto**: `5000`  
 **Protocolo**: gRPC (HTTP/2)  
 **Base de datos**: `AuthDb`
 
 #### Endpoints disponibles:
+
 - `Auth/Login` - Autenticación de usuarios
-- `Auth/Register` - Registro de nuevos usuarios  
+- `Auth/Register` - Registro de nuevos usuarios
 - `Auth/ValidateToken` - Validación de tokens JWT
 - `Auth/RefreshToken` - Renovación de tokens
 
 #### Roles del sistema:
+
 - `Admin` - Administrador del sistema
 - `Operador` - Usuario operador
 - `Supervisor` - Usuario supervisor
 
 #### Usuario predeterminado:
+
 - **Username**: `admin`
 - **Password**: `admin123`
 - **Role**: `Admin`
@@ -92,6 +104,7 @@ Cada microservicio sigue una arquitectura en capas:
 ## 🚀 Instalación y Despliegue
 
 ### Prerrequisitos
+
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (para despliegue con Docker)
 - [SQL Server](https://www.microsoft.com/sql-server) (para despliegue local sin Docker)
@@ -100,12 +113,14 @@ Cada microservicio sigue una arquitectura en capas:
 ### 🐳 Despliegue Local con Docker
 
 #### 1. Clonar el repositorio
+
 ```bash
 git clone https://github.com/A1EXF6A/fuel-system.git
 cd fuel-system
 ```
 
 #### 2. Construir y ejecutar con Docker Compose
+
 ```bash
 # Construir y ejecutar todos los servicios
 docker-compose up -d
@@ -118,6 +133,7 @@ docker ps
 ```
 
 #### 3. Verificar funcionamiento
+
 ```bash
 # Verificar conectividad
 grpcurl -plaintext localhost:5000 list
@@ -127,6 +143,7 @@ grpcurl -plaintext -d '{"username":"admin","password":"admin123"}' localhost:500
 ```
 
 #### 4. Detener servicios
+
 ```bash
 docker-compose down
 ```
@@ -134,7 +151,9 @@ docker-compose down
 ### 💻 Despliegue Local sin Docker
 
 #### 1. Configurar Base de Datos
+
 Actualizar `XYZ.AuthService/appsettings.json`:
+
 ```json
 {
   "ConnectionStrings": {
@@ -144,12 +163,14 @@ Actualizar `XYZ.AuthService/appsettings.json`:
 ```
 
 #### 2. Aplicar Migraciones
+
 ```bash
 cd XYZ.AuthService
 dotnet ef database update
 ```
 
 #### 3. Ejecutar el Servicio
+
 ```bash
 # Ejecutar en modo desarrollo
 dotnet run
@@ -159,11 +180,13 @@ dotnet run --configuration Release
 ```
 
 #### 4. Verificar funcionamiento
+
 El servicio estará disponible en `http://localhost:5000`
 
 ## 🧪 Testing
 
 ### Usando grpcurl
+
 ```bash
 # Listar servicios disponibles
 grpcurl -plaintext localhost:5000 list
@@ -179,6 +202,7 @@ grpcurl -plaintext -d '{"username":"newuser","password":"password123","role":"Op
 ```
 
 ### Usando Postman
+
 1. Crear nueva **gRPC Request**
 2. **Server URL**: `localhost:5000`
 3. Habilitar **"Use server reflection"**
@@ -188,6 +212,7 @@ grpcurl -plaintext -d '{"username":"newuser","password":"password123","role":"Op
 ## ⚙️ Configuración
 
 ### Variables de Entorno (Docker)
+
 ```yaml
 # docker-compose.yml
 environment:
@@ -195,6 +220,7 @@ environment:
 ```
 
 ### Configuración de Base de Datos
+
 ```json
 {
   "ConnectionStrings": {
@@ -204,6 +230,7 @@ environment:
 ```
 
 ### Configuración JWT
+
 ```json
 {
   "Jwt": {
@@ -217,24 +244,28 @@ environment:
 ### Funcionalidades Planificadas
 
 #### DriversService
+
 - [ ] Registrar choferes
-- [ ] Consultar disponibilidad  
+- [ ] Consultar disponibilidad
 - [ ] Asignar choferes por tipo de maquinaria
 - [ ] Gestión de licencias
 
 #### VehiclesService
+
 - [ ] Clasificación liviano/pesado
 - [ ] Estado operativo
 - [ ] Asociación con choferes y rutas
 - [ ] Especificaciones técnicas
 
-#### RoutesService  
+#### RoutesService
+
 - [ ] Definir rutas con distancias
 - [ ] Asignar vehículos y choferes
 - [ ] Calcular consumo estimado
 - [ ] Gestión de horarios
 
 #### FuelService
+
 - [ ] Registrar consumo real
 - [ ] Generar reportes por tipo de maquinaria
 - [ ] Comparar estimado vs real
@@ -278,3 +309,4 @@ Este proyecto está bajo la licencia MIT. Ver archivo `LICENSE` para más detall
 **Desarrollado por**: [A1EXF6A](https://github.com/A1EXF6A)  
 **Proyecto**: Sistema de Gestión de Combustible  
 **Fecha**: Septiembre 2025
+

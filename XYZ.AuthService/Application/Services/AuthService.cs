@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using XYZ.AuthService.Application.Interfaces;
 using XYZ.AuthService.Infrastructure.Persistence;
@@ -8,18 +6,11 @@ using XYZ.AuthService.Shared.Dtos;
 
 namespace XYZ.AuthService.Application.Services;
 
-public class AuthService : IAuthService
+public class AuthService(AuthDbContext db, PasswordHasher hasher, JwtTokenGenerator jwt) : IAuthService
 {
-    private readonly AuthDbContext _db;
-    private readonly PasswordHasher _hasher;
-    private readonly JwtTokenGenerator _jwt;
-
-    public AuthService(AuthDbContext db, PasswordHasher hasher, JwtTokenGenerator jwt)
-    {
-        _db = db;
-        _hasher = hasher;
-        _jwt = jwt;
-    }
+    private readonly AuthDbContext _db = db;
+    private readonly PasswordHasher _hasher = hasher;
+    private readonly JwtTokenGenerator _jwt = jwt;
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
     {

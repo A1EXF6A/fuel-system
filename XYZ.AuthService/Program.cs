@@ -24,10 +24,14 @@ builder.Host.UseSerilog((ctx, lc) => lc
 
 // Base de datos
 builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // JWT
 var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(jwtKey))
+{
+    throw new InvalidOperationException("JWT Key is not configured.");
+}
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -58,7 +62,6 @@ builder.Services.AddGrpcReflection();
 
 var app = builder.Build();
 
-// Configurar para gRPC (HTTP/2)
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -66,14 +69,13 @@ app.UseAuthorization();
 app.MapGrpcService<XYZ.AuthService.Controllers.AuthGrpcService>();
 app.MapGrpcReflectionService();
 
-// Configurar Kestrel para HTTP/2
-app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+app.MapGet("/", () =>
+        "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
 
-// Ejecutar SeedData
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-    db.Database.Migrate();
+    db.Database.EnsureCreated();
     SeedData.Initialize(db, scope.ServiceProvider.GetRequiredService<PasswordHasher>());
 }
 
