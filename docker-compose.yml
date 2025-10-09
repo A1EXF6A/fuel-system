@@ -1,13 +1,14 @@
 version: "3.9"
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver
+  postgres:
+    image: postgres:13.22-alpine3.22
+    container_name: postgres
     environment:
-      SA_PASSWORD: "Your_password123"
-      ACCEPT_EULA: "Y"
+      POSTGRES_DB: "authdb"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
     ports:
-      - "1433:1433"
+      - "5432:5432"
     networks:
       - fuel-net
 
@@ -15,7 +16,7 @@ services:
     image: authservice-grpc-http2:latest
     container_name: authservice
     depends_on:
-      - sqlserver
+      - postgres
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     ports:
