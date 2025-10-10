@@ -11,12 +11,18 @@ services:
       - "5432:5432"
     networks:
       - fuel-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   authservice:
     image: authservice-grpc-http2:latest
     container_name: authservice
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     ports:
