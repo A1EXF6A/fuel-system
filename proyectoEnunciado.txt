@@ -36,6 +36,8 @@ Seguridad y Autenticación
 
                         API Gateway
                             |
+                        AuthService
+                            |
             -------------------------------------
             |               |                   |
     DriversService    VehiclesService     RoutesService

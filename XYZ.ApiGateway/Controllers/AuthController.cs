@@ -34,7 +34,7 @@ public class AuthController : ControllerBase
                 role = response.Role
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return BadRequest(new { message = "Invalid credentials. Please try again." });
         }
@@ -53,9 +53,9 @@ public class AuthController : ControllerBase
                 role = response.Role
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new { message = "Could not register user. Please try again." });
         }
     }
 
@@ -71,9 +71,9 @@ public class AuthController : ControllerBase
                 role = response.Role
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new { message = "Could not validate token. Please try again." });
         }
     }
 }

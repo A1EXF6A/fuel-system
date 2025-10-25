@@ -209,6 +209,13 @@ public class DriversGatewayService
         }
         catch (RpcException ex)
         {
+            // If the drivers service doesn't implement this RPC, return an empty response
+            if (ex.StatusCode == StatusCode.Unimplemented)
+            {
+                _logger.LogWarning("GetDeletedDrivers is unimplemented on drivers service; returning empty list.");
+                return new GetDeletedDriversResponse();
+            }
+
             _logger.LogError(ex, "Error getting deleted drivers");
             throw new Exception($"Failed to get deleted drivers: {ex.Status.Detail}");
         }
