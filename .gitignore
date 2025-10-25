@@ -5,6 +5,7 @@ out/
 TestResults/
 fuel-system-ui/
 
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -491,3 +492,5 @@ appsettings.*.json
 # Kubernetes files with secrets
 *secret*.yaml
 *secret*.yml
+
+* .txt
