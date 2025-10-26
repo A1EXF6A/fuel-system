@@ -1,0 +1,10 @@
+{
+  "placa": "ABC123",
+  "chasis": "CH123",
+  "marca": "Marca",
+  "modelo": "Mod",
+  "anio": 2020,
+  "vehicleTypeId": 1,
+  "estado": "OK",
+  "km": 10.5
+}
