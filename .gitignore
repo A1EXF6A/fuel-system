@@ -494,3 +494,7 @@ appsettings.*.json
 *secret*.yml
 
 * .txt
+dotnet new grpc -n
+XYZ.VehiclesService
+XYZ.RoutesService
+XYZ.FuelService
