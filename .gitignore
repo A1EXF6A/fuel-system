@@ -495,5 +495,4 @@ appsettings.*.json
 
 * .txt
 dotnet new grpc -n
-XYZ.RoutesService
 XYZ.FuelService

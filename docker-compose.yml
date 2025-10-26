@@ -70,6 +70,23 @@ services:
       - "5003:5002"
     networks:
       - fuel-net
+      
+  routesservice:
+    build:
+      context: ./XYZ.RoutesService
+      dockerfile: Dockerfile
+    container_name: routesservice
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=RoutesDb;Username=postgres;Password=postgres
+    ports:
+      - "5004:5004"
+    networks:
+      - fuel-net
+
 
 
 networks:
