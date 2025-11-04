@@ -6,6 +6,7 @@ namespace XYZ.FuelService.Domain.Entities;
 public class FuelRecord
 {
     public int Id { get; set; }
+    public int VehicleId { get; set; }
     public string VehiclePlaca { get; set; } = string.Empty;
     public int DriverId { get; set; }
     public int RouteId { get; set; }

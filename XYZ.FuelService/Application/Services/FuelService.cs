@@ -78,6 +78,7 @@ public class FuelService : IFuelService
 
         var record = new FuelRecord
         {
+            VehicleId = vresp.Id,
             VehiclePlaca = vehiclePlaca,
             DriverId = driverId,
             RouteId = routeId,
