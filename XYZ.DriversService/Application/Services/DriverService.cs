@@ -131,8 +131,37 @@ public class DriverService : IDriverService
         if (driver.IsAssigned)
             throw new InvalidOperationException("Driver is already assigned to a vehicle");
 
-    driver.IsAssigned = true;
-    driver.AssignedVehiclePlaca = vehiclePlaca;
+        // Verify vehicle exists and is not assigned to another driver
+        var vehiclesUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL") ?? "http://vehiclesservice:5002";
+        using var channel = Grpc.Net.Client.GrpcChannel.ForAddress(vehiclesUrl);
+        var vehiclesClient = new XYZ.VehiclesService.Protos.Vehicles.VehiclesClient(channel);
+
+        XYZ.VehiclesService.Protos.VehicleResponse vehicleResp;
+        try
+        {
+            vehicleResp = await vehiclesClient.GetVehicleByPlacaAsync(new XYZ.VehiclesService.Protos.GetVehicleByPlacaRequest { Placa = vehiclePlaca });
+        }
+        catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+        {
+            throw new InvalidOperationException("Vehicle not found");
+        }
+
+        // If vehicle is assigned to another driver, reject
+        if (!string.IsNullOrWhiteSpace(vehicleResp.AssignedDriverDocument) && vehicleResp.AssignedDriverDocument != driver.DocumentNumber)
+            throw new InvalidOperationException("Vehicle is already assigned to another driver");
+
+        // Proceed: set vehicle assigned driver document and update driver
+        try
+        {
+            await vehiclesClient.SetAssignedDriverAsync(new XYZ.VehiclesService.Protos.SetAssignedDriverRequest { Placa = vehiclePlaca, DriverDocument = driver.DocumentNumber });
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to assign vehicle: " + ex.Message);
+        }
+
+        driver.IsAssigned = true;
+        driver.AssignedVehiclePlaca = vehiclePlaca;
         driver.AssignmentDate = DateTime.UtcNow;
 
         await _driverRepository.UpdateAsync(driver);
@@ -147,6 +176,22 @@ public class DriverService : IDriverService
 
         if (!driver.IsAssigned)
             return true; // Already unassigned
+
+        // Clear vehicle assigned document if vehicle exists
+        if (!string.IsNullOrWhiteSpace(driver.AssignedVehiclePlaca))
+        {
+            var vehiclesUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL") ?? "http://vehiclesservice:5002";
+            using var channel = Grpc.Net.Client.GrpcChannel.ForAddress(vehiclesUrl);
+            var vehiclesClient = new XYZ.VehiclesService.Protos.Vehicles.VehiclesClient(channel);
+            try
+            {
+                await vehiclesClient.SetAssignedDriverAsync(new XYZ.VehiclesService.Protos.SetAssignedDriverRequest { Placa = driver.AssignedVehiclePlaca, DriverDocument = "" });
+            }
+            catch
+            {
+                // ignore failures to clear vehicle; still proceed to unassign driver record
+            }
+        }
 
         driver.IsAssigned = false;
         driver.AssignedVehiclePlaca = null;

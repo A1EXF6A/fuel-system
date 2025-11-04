@@ -18,6 +18,36 @@ public class RoutesGrpcService : Routes.RoutesBase
     {
         try
         {
+            // Validate driver exists and is assigned to the provided vehicle placa
+            var driversUrl = Environment.GetEnvironmentVariable("DRIVERS_SERVICE_URL") ?? "http://driversservice:80";
+            using var chDrivers = Grpc.Net.Client.GrpcChannel.ForAddress(driversUrl);
+            var driversClient = new XYZ.DriversService.Protos.Drivers.DriversClient(chDrivers);
+            XYZ.DriversService.Protos.GetDriverResponse drvResp;
+            try
+            {
+                drvResp = await driversClient.GetDriverAsync(new XYZ.DriversService.Protos.GetDriverRequest { Id = request.DriverId });
+            }
+            catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+            {
+                throw new InvalidOperationException("Driver not found");
+            }
+
+            if (!drvResp.Driver.IsAssigned || drvResp.Driver.AssignedVehiclePlaca != request.VehiclePlaca)
+                throw new InvalidOperationException("Driver is not assigned to the specified vehicle");
+
+            // Validate vehicle exists
+            var vehiclesUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL") ?? "http://vehiclesservice:5002";
+            using var chVehicles = Grpc.Net.Client.GrpcChannel.ForAddress(vehiclesUrl);
+            var vehiclesClient = new XYZ.VehiclesService.Protos.Vehicles.VehiclesClient(chVehicles);
+            try
+            {
+                await vehiclesClient.GetVehicleByPlacaAsync(new XYZ.VehiclesService.Protos.GetVehicleByPlacaRequest { Placa = request.VehiclePlaca });
+            }
+            catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+            {
+                throw new InvalidOperationException("Vehicle not found");
+            }
+
             var route = await _service.CreateAsync(request.Nombre, request.Origen, request.Destino, request.VehiclePlaca, request.DriverId);
 
             return new RouteResponse

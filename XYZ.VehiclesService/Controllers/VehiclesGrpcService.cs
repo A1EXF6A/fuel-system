@@ -51,6 +51,48 @@ public class VehiclesGrpcService : Vehicles.VehiclesBase
         };
     }
 
+    public override async Task<VehicleResponse> GetVehicleByPlaca(GetVehicleByPlacaRequest request, ServerCallContext context)
+    {
+        var v = await _service.GetByPlacaAsync(request.Placa);
+        if (v == null)
+            throw new RpcException(new Status(StatusCode.NotFound, "Vehicle not found"));
+
+        return new VehicleResponse
+        {
+            Id = v.Id,
+            Placa = v.Placa,
+            Marca = v.Marca,
+            Modelo = v.Modelo,
+            TipoMaquinaria = v.VehicleType?.TipoMaquinaria.ToString() ?? "",
+            TipoMotor = v.VehicleType?.TipoMotor ?? "",
+            ConsumoBase = v.VehicleType?.ConsumoBase ?? 0,
+            Estado = v.Estado,
+            Km = v.Km,
+            AssignedDriverDocument = v.AssignedDriverDocument ?? ""
+        };
+    }
+
+    public override async Task<VehicleResponse> SetAssignedDriver(SetAssignedDriverRequest request, ServerCallContext context)
+    {
+        var v = await _service.UpdateAssignedDriverDocumentAsync(request.Placa, string.IsNullOrWhiteSpace(request.DriverDocument) ? null : request.DriverDocument);
+        if (v == null)
+            throw new RpcException(new Status(StatusCode.NotFound, "Vehicle not found"));
+
+        return new VehicleResponse
+        {
+            Id = v.Id,
+            Placa = v.Placa,
+            Marca = v.Marca,
+            Modelo = v.Modelo,
+            TipoMaquinaria = v.VehicleType?.TipoMaquinaria.ToString() ?? "",
+            TipoMotor = v.VehicleType?.TipoMotor ?? "",
+            ConsumoBase = v.VehicleType?.ConsumoBase ?? 0,
+            Estado = v.Estado,
+            Km = v.Km,
+            AssignedDriverDocument = v.AssignedDriverDocument ?? ""
+        };
+    }
+
     public override async Task<VehicleResponse> GetVehicleById(GetVehicleRequest request, ServerCallContext context)
     {
         var v = await _service.GetByIdAsync(request.Id);

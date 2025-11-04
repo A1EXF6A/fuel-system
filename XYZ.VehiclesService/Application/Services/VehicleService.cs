@@ -20,4 +20,6 @@ public class VehicleService : IVehicleService
     public Task<Vehicle?> GetByIdAsync(int id) => _vehicleRepo.GetByIdAsync(id);
     public Task<List<Vehicle>> GetAllAsync() => _vehicleRepo.GetAllAsync();
     public Task<List<VehicleType>> GetVehicleTypesAsync() => _typeRepo.GetAllAsync();
+    public Task<Vehicle?> UpdateAssignedDriverDocumentAsync(string placa, string? driverDocument)
+        => _vehicleRepo.UpdateAssignedDriverDocumentAsync(placa, driverDocument);
 }

@@ -25,4 +25,13 @@ public class VehicleRepository
 
     public async Task<List<Vehicle>> GetAllAsync()
         => await _db.Vehicles.Include(x => x.VehicleType).ToListAsync();
+
+    public async Task<Vehicle?> UpdateAssignedDriverDocumentAsync(string placa, string? driverDocument)
+    {
+        var v = await _db.Vehicles.FirstOrDefaultAsync(x => x.Placa == placa);
+        if (v == null) return null;
+        v.AssignedDriverDocument = string.IsNullOrWhiteSpace(driverDocument) ? null : driverDocument;
+        await _db.SaveChangesAsync();
+        return v;
+    }
 }
