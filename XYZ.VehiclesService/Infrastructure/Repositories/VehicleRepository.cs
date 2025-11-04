@@ -20,6 +20,9 @@ public class VehicleRepository
     public async Task<Vehicle?> GetByIdAsync(int id)
         => await _db.Vehicles.Include(x => x.VehicleType).FirstOrDefaultAsync(x => x.Id == id);
 
+    public async Task<Vehicle?> GetByPlacaAsync(string placa)
+        => await _db.Vehicles.Include(x => x.VehicleType).FirstOrDefaultAsync(x => x.Placa == placa);
+
     public async Task<List<Vehicle>> GetAllAsync()
         => await _db.Vehicles.Include(x => x.VehicleType).ToListAsync();
 }

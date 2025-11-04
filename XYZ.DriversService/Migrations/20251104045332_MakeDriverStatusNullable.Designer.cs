@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using XYZ.DriversService.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using XYZ.DriversService.Infrastructure.Persistence;
 namespace XYZ.DriversService.Migrations
 {
     [DbContext(typeof(DriversDbContext))]
-    partial class DriversDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251104045332_MakeDriverStatusNullable")]
+    partial class MakeDriverStatusNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,7 +33,7 @@ namespace XYZ.DriversService.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AssignedVehiclePlaca")
+                    b.Property<string>("AssignedVehicleId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("AssignmentDate")

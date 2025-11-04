@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using XYZ.RoutesService.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using XYZ.RoutesService.Infrastructure.Persistence;
 namespace XYZ.RoutesService.Migrations
 {
     [DbContext(typeof(RoutesDbContext))]
-    partial class RoutesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251104052540_ChangeRouteVehicleToPlaca")]
+    partial class ChangeRouteVehicleToPlaca
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

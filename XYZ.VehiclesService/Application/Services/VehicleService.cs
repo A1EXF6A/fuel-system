@@ -16,6 +16,7 @@ public class VehicleService : IVehicleService
     }
 
     public Task<Vehicle> CreateAsync(Vehicle v) => _vehicleRepo.AddAsync(v);
+    public Task<Vehicle?> GetByPlacaAsync(string placa) => _vehicleRepo.GetByPlacaAsync(placa);
     public Task<Vehicle?> GetByIdAsync(int id) => _vehicleRepo.GetByIdAsync(id);
     public Task<List<Vehicle>> GetAllAsync() => _vehicleRepo.GetAllAsync();
     public Task<List<VehicleType>> GetVehicleTypesAsync() => _typeRepo.GetAllAsync();

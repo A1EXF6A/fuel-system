@@ -212,9 +212,9 @@ public class DriversGrpcService : Drivers.DriversBase
     {
         try
         {
-            _logger.LogInformation("Assigning driver {DriverId} to vehicle {VehicleId}", request.DriverId, request.VehicleId);
+            _logger.LogInformation("Assigning driver {DriverId} to vehicle placa {VehiclePlaca}", request.DriverId, request.VehiclePlaca);
 
-            var success = await _driverService.AssignDriverAsync(request.DriverId, request.VehicleId);
+            var success = await _driverService.AssignDriverAsync(request.DriverId, request.VehiclePlaca);
 
             if (!success)
             {
@@ -237,7 +237,7 @@ public class DriversGrpcService : Drivers.DriversBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error assigning driver {DriverId} to vehicle {VehicleId}", request.DriverId, request.VehicleId);
+            _logger.LogError(ex, "Error assigning driver {DriverId} to vehicle placa {VehiclePlaca}", request.DriverId, request.VehiclePlaca);
             throw new RpcException(new Status(StatusCode.Internal, "An error occurred while assigning the driver"));
         }
     }
@@ -289,9 +289,9 @@ public class DriversGrpcService : Drivers.DriversBase
         driver.CreatedAt = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(dto.CreatedAt.ToUniversalTime());
         driver.UpdatedAt = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(dto.UpdatedAt.ToUniversalTime());
 
-        if (!string.IsNullOrEmpty(dto.AssignedVehicleId))
+        if (!string.IsNullOrEmpty(dto.AssignedVehiclePlaca))
         {
-            driver.AssignedVehicleId = dto.AssignedVehicleId;
+            driver.AssignedVehiclePlaca = dto.AssignedVehiclePlaca;
         }
 
         if (dto.AssignmentDate.HasValue)

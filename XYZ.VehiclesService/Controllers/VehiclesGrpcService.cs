@@ -16,6 +16,11 @@ public class VehiclesGrpcService : Vehicles.VehiclesBase
 
     public override async Task<VehicleResponse> CreateVehicle(CreateVehicleRequest request, ServerCallContext context)
     {
+        // Verificar unicidad de placa
+        var existing = await _service.GetByPlacaAsync(request.Placa);
+        if (existing != null)
+            throw new RpcException(new Status(StatusCode.AlreadyExists, "Vehicle with the same placa already exists"));
+
         var vehicle = new Vehicle
         {
             Placa = request.Placa,
@@ -26,6 +31,7 @@ public class VehiclesGrpcService : Vehicles.VehiclesBase
             VehicleTypeId = request.VehicleTypeId,
             Estado = request.Estado,
             Km = request.Km
+            ,AssignedDriverDocument = string.IsNullOrWhiteSpace(request.AssignedDriverDocument) ? null : request.AssignedDriverDocument
         };
 
         var created = await _service.CreateAsync(vehicle);
@@ -40,7 +46,8 @@ public class VehiclesGrpcService : Vehicles.VehiclesBase
             TipoMotor = created.VehicleType?.TipoMotor ?? "",
             ConsumoBase = created.VehicleType?.ConsumoBase ?? 0,
             Estado = created.Estado,
-            Km = created.Km
+            Km = created.Km,
+            AssignedDriverDocument = created.AssignedDriverDocument ?? ""
         };
     }
 
@@ -60,7 +67,8 @@ public class VehiclesGrpcService : Vehicles.VehiclesBase
             TipoMotor = v.VehicleType?.TipoMotor ?? "",
             ConsumoBase = v.VehicleType?.ConsumoBase ?? 0,
             Estado = v.Estado,
-            Km = v.Km
+            Km = v.Km,
+            AssignedDriverDocument = v.AssignedDriverDocument ?? ""
         };
     }
 
@@ -78,7 +86,8 @@ public class VehiclesGrpcService : Vehicles.VehiclesBase
             TipoMotor = v.VehicleType?.TipoMotor ?? "",
             ConsumoBase = v.VehicleType?.ConsumoBase ?? 0,
             Estado = v.Estado,
-            Km = v.Km
+            Km = v.Km,
+            AssignedDriverDocument = v.AssignedDriverDocument ?? ""
         }));
         return response;
     }

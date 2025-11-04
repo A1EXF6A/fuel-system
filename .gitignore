@@ -496,3 +496,6 @@ appsettings.*.json
 * .txt
 dotnet new grpc -n
 XYZ.FuelService
+docs
+tools
+test-grpc-all.ps1

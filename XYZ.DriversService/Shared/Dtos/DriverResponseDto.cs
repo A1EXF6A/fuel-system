@@ -19,6 +19,6 @@ public class DriverResponseDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public bool IsAssigned { get; set; }
-    public string? AssignedVehicleId { get; set; }
+    public string? AssignedVehiclePlaca { get; set; }
     public DateTime? AssignmentDate { get; set; }
 }

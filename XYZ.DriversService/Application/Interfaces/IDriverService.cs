@@ -13,7 +13,7 @@ public interface IDriverService
     Task<DriverResponseDto> CreateDriverAsync(CreateDriverRequestDto request);
     Task<DriverResponseDto?> UpdateDriverAsync(int id, UpdateDriverRequestDto request);
     Task<bool> DeleteDriverAsync(int id);
-    Task<bool> AssignDriverAsync(int driverId, string vehicleId);
+    Task<bool> AssignDriverAsync(int driverId, string vehiclePlaca);
     Task<bool> UnassignDriverAsync(int driverId);
     Task<bool> DriverExistsAsync(int id);
 }

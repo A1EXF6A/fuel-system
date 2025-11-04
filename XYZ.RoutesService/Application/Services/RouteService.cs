@@ -19,7 +19,7 @@ public class RouteService : IRouteService
         _httpClient = factory.CreateClient("GeoClient");
     }
 
-    public async Task<Route> CreateAsync(string nombre, string origen, string destino, int vehicleId, int driverId)
+    public async Task<Route> CreateAsync(string nombre, string origen, string destino, string vehiclePlaca, int driverId)
     {
         // Validaciones básicas de entrada
         if (string.IsNullOrWhiteSpace(nombre))
@@ -28,8 +28,8 @@ public class RouteService : IRouteService
             throw new ArgumentException("El origen no puede estar vacío.", nameof(origen));
         if (string.IsNullOrWhiteSpace(destino))
             throw new ArgumentException("El destino no puede estar vacío.", nameof(destino));
-        if (vehicleId <= 0)
-            throw new ArgumentException("vehicleId debe ser un entero positivo.", nameof(vehicleId));
+        if (string.IsNullOrWhiteSpace(vehiclePlaca))
+            throw new ArgumentException("vehiclePlaca no puede estar vacío.", nameof(vehiclePlaca));
         if (driverId <= 0)
             throw new ArgumentException("driverId debe ser un entero positivo.", nameof(driverId));
 
@@ -66,7 +66,7 @@ public class RouteService : IRouteService
             Destino = destino,
             DistanciaKm = distanciaKm,
             DuracionMinutos = duracionMinutos,
-            VehicleId = vehicleId,
+            VehiclePlaca = vehiclePlaca,
             DriverId = driverId
         };
 

@@ -18,6 +18,8 @@ message CreateVehicleRequest {
   int32 vehicleTypeId = 6;
   string estado = 7;
   double km = 8;
+  // Documento del chofer asignado (opcional)
+  string assigned_driver_document = 9;
 }
 
 message GetVehicleRequest {
@@ -38,6 +40,8 @@ message VehicleResponse {
   double consumoBase = 9;
   string estado = 10;
   double km = 11;
+  // Documento del chofer asignado al vehículo (si existe)
+  string assigned_driver_document = 12;
 }
 
 message VehiclesListResponse {

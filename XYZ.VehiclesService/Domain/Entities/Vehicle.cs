@@ -13,4 +13,6 @@ public class Vehicle
     public string Estado { get; set; } = "Operativo";
     public double Km { get; set; }
     public DateTime? LastMaintenance { get; set; }
+    // Documento del chofer asignado (opcional)
+    public string? AssignedDriverDocument { get; set; }
 }

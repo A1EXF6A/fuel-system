@@ -61,7 +61,7 @@ message GetAvailableDriversRequest {
 
 message AssignDriverRequest {
   int32 driver_id = 1;
-  string vehicle_id = 2;
+  string vehicle_placa = 2;
 }
 
 message UnassignDriverRequest {
@@ -125,6 +125,6 @@ message Driver {
   google.protobuf.Timestamp created_at = 13;
   google.protobuf.Timestamp updated_at = 14;
   bool is_assigned = 15;
-  string assigned_vehicle_id = 16;
+  string assigned_vehicle_placa = 16;
   google.protobuf.Timestamp assignment_date = 17;
 }

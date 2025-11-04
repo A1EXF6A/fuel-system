@@ -18,7 +18,7 @@ public class RoutesGrpcService : Routes.RoutesBase
     {
         try
         {
-            var route = await _service.CreateAsync(request.Nombre, request.Origen, request.Destino, request.VehicleId, request.DriverId);
+            var route = await _service.CreateAsync(request.Nombre, request.Origen, request.Destino, request.VehiclePlaca, request.DriverId);
 
             return new RouteResponse
             {
@@ -29,7 +29,7 @@ public class RoutesGrpcService : Routes.RoutesBase
                 DistanciaKm = route.DistanciaKm,
                 DuracionMinutos = route.DuracionMinutos,
                 Estado = route.Estado.ToString(),
-                VehicleId = route.VehicleId,
+                VehiclePlaca = route.VehiclePlaca,
                 DriverId = route.DriverId
             };
         }
@@ -55,7 +55,7 @@ public class RoutesGrpcService : Routes.RoutesBase
         if (route == null)
             throw new RpcException(new Status(StatusCode.NotFound, "Route not found"));
 
-        return new RouteResponse
+            return new RouteResponse
         {
             Id = route.Id,
             Nombre = route.Nombre,
@@ -64,7 +64,7 @@ public class RoutesGrpcService : Routes.RoutesBase
             DistanciaKm = route.DistanciaKm,
             DuracionMinutos = route.DuracionMinutos,
             Estado = route.Estado.ToString(),
-            VehicleId = route.VehicleId,
+                VehiclePlaca = route.VehiclePlaca,
             DriverId = route.DriverId
         };
     }
@@ -73,7 +73,7 @@ public class RoutesGrpcService : Routes.RoutesBase
     {
         var list = await _service.GetAllAsync();
         var response = new RoutesListResponse();
-        response.Routes.AddRange(list.Select(r => new RouteResponse
+            response.Routes.AddRange(list.Select(r => new RouteResponse
         {
             Id = r.Id,
             Nombre = r.Nombre,
@@ -82,7 +82,7 @@ public class RoutesGrpcService : Routes.RoutesBase
             DistanciaKm = r.DistanciaKm,
             DuracionMinutos = r.DuracionMinutos,
             Estado = r.Estado.ToString(),
-            VehicleId = r.VehicleId,
+                VehiclePlaca = r.VehiclePlaca,
             DriverId = r.DriverId
         }));
         return response;

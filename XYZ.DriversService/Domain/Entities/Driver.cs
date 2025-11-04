@@ -37,7 +37,8 @@ public class Driver
     
     public DriverType DriverType { get; set; }
     
-    public DriverStatus Status { get; set; }
+    // Status is nullable so EF Core can distinguish CLR default (null) from DB default value
+    public DriverStatus? Status { get; set; }
     
     public DateTime HireDate { get; set; }
     
@@ -48,7 +49,7 @@ public class Driver
     // Navigation properties for assignments (future use)
     public bool IsAssigned { get; set; } = false;
     
-    public string? AssignedVehicleId { get; set; }
+    public string? AssignedVehiclePlaca { get; set; }
     
     public DateTime? AssignmentDate { get; set; }
 }

@@ -55,8 +55,9 @@ public class DriversDbContext : DbContext
             entity.Property(e => e.DriverType)
                 .HasConversion<int>();
 
+            // Make Status nullable in the model mapping to allow EF to use the database default
             entity.Property(e => e.Status)
-                .HasConversion<int>()
+                .HasConversion<int?>()
                 .HasDefaultValue(DriverStatus.Active);
 
             entity.Property(e => e.CreatedAt)

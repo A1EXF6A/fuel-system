@@ -68,12 +68,12 @@ using (var scope = app.Services.CreateScope())
     
     try
     {
-        Log.Information("Ensuring database exists...");
-        await context.Database.EnsureCreatedAsync();
-        
+        Log.Information("Applying pending migrations (if any)...");
+        await context.Database.MigrateAsync();
+
         Log.Information("Seeding database...");
         await SeedData.SeedAsync(context);
-        
+
         Log.Information("Database setup completed successfully");
     }
     catch (Exception ex)

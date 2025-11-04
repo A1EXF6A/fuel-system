@@ -11,7 +11,7 @@ public class Route
     public double DistanciaKm { get; set; }
     public double DuracionMinutos { get; set; }
     public EstadoRuta Estado { get; set; } = EstadoRuta.Planificada;
-    public int VehicleId { get; set; }
+    public string VehiclePlaca { get; set; } = string.Empty;
     public int DriverId { get; set; }
     public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 }

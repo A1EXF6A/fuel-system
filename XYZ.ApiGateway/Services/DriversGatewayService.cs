@@ -125,14 +125,14 @@ public class DriversGatewayService
         }
     }
 
-    public async Task<AssignDriverResponse> AssignDriverAsync(int driverId, string vehicleId)
+    public async Task<AssignDriverResponse> AssignDriverAsync(int driverId, string vehiclePlaca)
     {
         try
         {
             var request = new AssignDriverRequest
             {
                 DriverId = driverId,
-                VehicleId = vehicleId
+                VehiclePlaca = vehiclePlaca
             };
 
             var response = await _driversClient.AssignDriverAsync(request);
@@ -140,7 +140,7 @@ public class DriversGatewayService
         }
         catch (RpcException ex)
         {
-            _logger.LogError(ex, "Error assigning driver {DriverId} to vehicle {VehicleId}", driverId, vehicleId);
+            _logger.LogError(ex, "Error assigning driver {DriverId} to vehicle placa {VehiclePlaca}", driverId, vehiclePlaca);
             throw new Exception($"Failed to assign driver: {ex.Status.Detail}");
         }
     }

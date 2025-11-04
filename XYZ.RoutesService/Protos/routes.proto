@@ -13,7 +13,7 @@ message CreateRouteRequest {
   string nombre = 1;
   string origen = 2;
   string destino = 3;
-  int32 vehicleId = 4;
+  string vehicle_placa = 4;
   int32 driverId = 5;
 }
 
@@ -36,7 +36,7 @@ message RouteResponse {
   double distanciaKm = 5;
   double duracionMinutos = 6;
   string estado = 7;
-  int32 vehicleId = 8;
+  string vehicle_placa = 8;
   int32 driverId = 9;
 }
 

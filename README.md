@@ -232,7 +232,7 @@ grpcurl -plaintext -d '{"id":1}' localhost:5002 drivers.Drivers/GetDriver
 grpcurl -plaintext -d '{"first_name":"Test","last_name":"Driver","document_number":"99999999","phone_number":"+1234567899","email":"test@company.com","license_number":"LIC999","license_category":2,"license_expiry_date":"2027-12-31T00:00:00Z","driver_type":1,"hire_date":"2024-01-01T00:00:00Z"}' localhost:5002 drivers.Drivers/CreateDriver
 
 # Asignar chofer a vehículo
-grpcurl -plaintext -d '{"driver_id":1,"vehicle_id":"VEH001"}' localhost:5002 drivers.Drivers/AssignDriver
+grpcurl -plaintext -d '{"driver_id":1,"vehicle_placa":"VEH001"}' localhost:5002 drivers.Drivers/AssignDriver
 ```
 
 > **Nota para Windows**: Si grpcurl no se reconoce, instálalo desde [GitHub Releases](https://github.com/fullstorydev/grpcurl/releases) y agrégalo al PATH del sistema.

@@ -119,7 +119,7 @@ public class DriverService : IDriverService
         return await _driverRepository.DeleteAsync(id);
     }
 
-    public async Task<bool> AssignDriverAsync(int driverId, string vehicleId)
+    public async Task<bool> AssignDriverAsync(int driverId, string vehiclePlaca)
     {
         var driver = await _driverRepository.GetByIdAsync(driverId);
         if (driver == null)
@@ -131,8 +131,8 @@ public class DriverService : IDriverService
         if (driver.IsAssigned)
             throw new InvalidOperationException("Driver is already assigned to a vehicle");
 
-        driver.IsAssigned = true;
-        driver.AssignedVehicleId = vehicleId;
+    driver.IsAssigned = true;
+    driver.AssignedVehiclePlaca = vehiclePlaca;
         driver.AssignmentDate = DateTime.UtcNow;
 
         await _driverRepository.UpdateAsync(driver);
@@ -149,7 +149,7 @@ public class DriverService : IDriverService
             return true; // Already unassigned
 
         driver.IsAssigned = false;
-        driver.AssignedVehicleId = null;
+        driver.AssignedVehiclePlaca = null;
         driver.AssignmentDate = null;
 
         await _driverRepository.UpdateAsync(driver);
@@ -175,12 +175,12 @@ public class DriverService : IDriverService
             LicenseCategory = driver.LicenseCategory,
             LicenseExpiryDate = driver.LicenseExpiryDate,
             DriverType = driver.DriverType,
-            Status = driver.Status,
+            Status = driver.Status ?? DriverStatus.Active,
             HireDate = driver.HireDate,
             CreatedAt = driver.CreatedAt,
             UpdatedAt = driver.UpdatedAt,
             IsAssigned = driver.IsAssigned,
-            AssignedVehicleId = driver.AssignedVehicleId,
+            AssignedVehiclePlaca = driver.AssignedVehiclePlaca,
             AssignmentDate = driver.AssignmentDate
         };
     }

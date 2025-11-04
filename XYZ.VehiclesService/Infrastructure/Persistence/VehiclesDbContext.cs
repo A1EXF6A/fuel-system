@@ -9,4 +9,20 @@ public class VehiclesDbContext : DbContext
 
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<VehicleType> VehicleTypes => Set<VehicleType>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Placa única
+        modelBuilder.Entity<Vehicle>()
+            .HasIndex(v => v.Placa)
+            .IsUnique();
+
+        // AssignedDriverDocument opcional
+        modelBuilder.Entity<Vehicle>()
+            .Property(v => v.AssignedDriverDocument)
+            .HasMaxLength(100)
+            .IsRequired(false);
+    }
 }

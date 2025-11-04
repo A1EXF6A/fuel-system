@@ -39,7 +39,7 @@ public class DriversController : ControllerBase
                 createdAt = d.CreatedAt.ToDateTime(),
                 updatedAt = d.UpdatedAt.ToDateTime(),
                 isAssigned = d.IsAssigned,
-                assignedVehicleId = d.AssignedVehicleId,
+                assignedVehiclePlaca = d.AssignedVehiclePlaca,
                 assignmentDate = d.AssignmentDate?.ToDateTime(),
                 isDeleted = d.IsDeleted,
                 deletedAt = d.DeletedAt?.ToDateTime(),
@@ -78,7 +78,7 @@ public class DriversController : ControllerBase
                 createdAt = response.Driver.CreatedAt.ToDateTime(),
                 updatedAt = response.Driver.UpdatedAt.ToDateTime(),
                 isAssigned = response.Driver.IsAssigned,
-                assignedVehicleId = response.Driver.AssignedVehicleId,
+                assignedVehiclePlaca = response.Driver.AssignedVehiclePlaca,
                 assignmentDate = response.Driver.AssignmentDate?.ToDateTime()
             };
 
@@ -233,7 +233,7 @@ public class DriversController : ControllerBase
     {
         try
         {
-            var response = await _driversService.AssignDriverAsync(id, request.VehicleId);
+            var response = await _driversService.AssignDriverAsync(id, request.VehiclePlaca);
             return Ok(new { success = response.Success });
         }
         catch (Exception ex)
@@ -293,7 +293,7 @@ public class DriversController : ControllerBase
                 createdAt = d.CreatedAt.ToDateTime(),
                 updatedAt = d.UpdatedAt.ToDateTime(),
                 isAssigned = d.IsAssigned,
-                assignedVehicleId = d.AssignedVehicleId,
+                assignedVehiclePlaca = d.AssignedVehiclePlaca,
                 assignmentDate = d.AssignmentDate?.ToDateTime(),
                 isDeleted = d.IsDeleted,
                 deletedAt = d.DeletedAt?.ToDateTime(),
@@ -349,6 +349,6 @@ public record UpdateDriverRequestDto(
     int Status
 );
 
-public record AssignDriverRequestDto(string VehicleId);
+public record AssignDriverRequestDto(string VehiclePlaca);
 
 public record DeleteDriverRequestDto(string? DeletedBy, string? Reason);
