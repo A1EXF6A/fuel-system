@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option csharp_namespace = "XYZ.FuelService.Protos";
+
+service Fuel {
+  rpc CreateFuelPlan (FuelPlanRequest) returns (FuelPlanResponse);
+  rpc RegisterActualConsumption (ActualConsumptionRequest) returns (FuelPlanResponse);
+  rpc GetFuelReport (FuelReportRequest) returns (FuelReportResponse);
+}
+
+message FuelPlanRequest {
+  string vehiclePlaca = 1;
+  int32 driverId = 2;
+  int32 routeId = 3;
+}
+
+message ActualConsumptionRequest {
+  int32 planId = 1;
+  double actualLiters = 2;
+}
+
+message FuelPlanResponse {
+  int32 id = 1;
+  string vehiclePlaca = 2;
+  int32 driverId = 3;
+  int32 routeId = 4;
+  double estimatedLiters = 5;
+  double actualLiters = 6;
+  string estado = 7;
+  string tipoMaquinaria = 8;
+}
+
+message FuelReportRequest {
+  string filterType = 1; // "vehicle" | "driver" | "route"
+  string filterValue = 2; // when filterType == "vehicle" this will be placa; for others numeric ids as string
+}
+
+message FuelReportResponse {
+  repeated FuelPlanResponse registros = 1;
+}
