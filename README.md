@@ -41,11 +41,11 @@ Cada microservicio sigue una arquitectura en capas:
 ### ✅ Completado
 - **XYZ.AuthService** - Servicio de Autenticación y Autorización
 - **XYZ.DriversService** - Gestión de choferes
-
-### ⏳ Pendiente
-- **XYZ.VehiclesService** - Gestión de vehículos 
+- **XYZ.VehiclesService** - Gestión de vehículos
 - **XYZ.RoutesService** - Gestión de rutas
 - **XYZ.FuelService** - Gestión de consumo de combustible
+- **XYZ.ApiGateway** - Proxy REST con control de acceso por roles
+- **XYZ.Frontend** - Interfaz de usuario React completa con dashboards por rol
 
 ## 🛠️ Tecnologías
 
@@ -56,6 +56,10 @@ Cada microservicio sigue una arquitectura en capas:
 - **SQL Server** - Base de datos
 - **Serilog** - Logging estructurado
 - **JWT** - Autenticación y autorización
+
+### Frontend
+- **React** - Framework de interfaz de usuario
+- **Axios** - Cliente HTTP para APIs REST
 
 ### DevOps
 - **Docker** - Containerización
@@ -133,6 +137,7 @@ Cada microservicio sigue una arquitectura en capas:
 
 ### Prerrequisitos
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [Node.js](https://nodejs.org/) (para el frontend)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (para despliegue con Docker)
 - [SQL Server](https://www.microsoft.com/sql-server) (para despliegue local sin Docker)
 - [grpcurl](https://github.com/fullstorydev/grpcurl) (opcional, para testing)
@@ -157,16 +162,28 @@ docker-compose logs -f authservice
 docker ps
 ```
 
-#### 3. Verificar funcionamiento
+#### 3. Ejecutar el Frontend
 ```bash
-# Verificar conectividad
+# Instalar dependencias del frontend
+cd xyz-frontend
+npm install
+
+# Ejecutar el frontend
+npm start
+```
+
+#### 4. Verificar funcionamiento
+```bash
+# Verificar conectividad de servicios
 grpcurl -plaintext localhost:5000 list
 
 # Probar login
 grpcurl -plaintext -d '{"username":"admin","password":"admin123"}' localhost:5000 Auth/Login
+
+# Acceder al frontend en http://localhost:3000
 ```
 
-#### 4. Detener servicios
+#### 5. Detener servicios
 ```bash
 docker-compose down
 ```

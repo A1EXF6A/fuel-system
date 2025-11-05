@@ -10,4 +10,6 @@ public interface IVehicleService
     Task<List<Vehicle>> GetAllAsync();
     Task<List<VehicleType>> GetVehicleTypesAsync();
     Task<Vehicle?> UpdateAssignedDriverDocumentAsync(string placa, string? driverDocument);
+    Task<Vehicle?> UpdateAsync(Vehicle vehicle);
+    Task<bool> DeleteAsync(int id);
 }

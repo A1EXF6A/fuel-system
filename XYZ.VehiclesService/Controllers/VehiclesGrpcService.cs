@@ -114,6 +114,47 @@ public class VehiclesGrpcService : Vehicles.VehiclesBase
         };
     }
 
+    public override async Task<VehicleResponse> UpdateVehicle(UpdateVehicleRequest request, ServerCallContext context)
+    {
+        var vehicle = new Vehicle
+        {
+            Id = request.Id,
+            Placa = request.Placa,
+            Chasis = request.Chasis,
+            Marca = request.Marca,
+            Modelo = request.Modelo,
+            Anio = request.Anio,
+            VehicleTypeId = request.VehicleTypeId,
+            Estado = request.Estado,
+            Km = request.Km,
+            AssignedDriverDocument = string.IsNullOrWhiteSpace(request.AssignedDriverDocument) ? null : request.AssignedDriverDocument
+        };
+
+        var updated = await _service.UpdateAsync(vehicle);
+        if (updated == null)
+            throw new RpcException(new Status(StatusCode.NotFound, "Vehicle not found"));
+
+        return new VehicleResponse
+        {
+            Id = updated.Id,
+            Placa = updated.Placa,
+            Marca = updated.Marca,
+            Modelo = updated.Modelo,
+            TipoMaquinaria = updated.VehicleType?.TipoMaquinaria.ToString() ?? "",
+            TipoMotor = updated.VehicleType?.TipoMotor ?? "",
+            ConsumoBase = updated.VehicleType?.ConsumoBase ?? 0,
+            Estado = updated.Estado,
+            Km = updated.Km,
+            AssignedDriverDocument = updated.AssignedDriverDocument ?? ""
+        };
+    }
+
+    public override async Task<DeleteVehicleResponse> DeleteVehicle(DeleteVehicleRequest request, ServerCallContext context)
+    {
+        var ok = await _service.DeleteAsync(request.Id);
+        return new DeleteVehicleResponse { Success = ok };
+    }
+
     public override async Task<VehiclesListResponse> GetAllVehicles(EmptyRequest request, ServerCallContext context)
     {
         var list = await _service.GetAllAsync();
