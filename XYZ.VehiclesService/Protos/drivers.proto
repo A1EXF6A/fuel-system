@@ -13,10 +13,10 @@ service Drivers {
   rpc GetAllDrivers(GetAllDriversRequest) returns (GetAllDriversResponse);
   rpc UpdateDriver(UpdateDriverRequest) returns (UpdateDriverResponse);
   rpc DeleteDriver(DeleteDriverRequest) returns (DeleteDriverResponse);
-  rpc GetDriverByDocumentNumber(GetDriverByDocumentNumberRequest) returns (GetDriverResponse);
   rpc GetAvailableDrivers(GetAvailableDriversRequest) returns (GetAvailableDriversResponse);
   rpc AssignDriver(AssignDriverRequest) returns (AssignDriverResponse);
   rpc UnassignDriver(UnassignDriverRequest) returns (UnassignDriverResponse);
+  rpc GetDriverByDocumentNumber(GetDriverByDocumentNumberRequest) returns (GetDriverResponse);
 }
 
 // Mensajes de Request
@@ -57,10 +57,6 @@ message DeleteDriverRequest {
   int32 id = 1;
 }
 
-message GetDriverByDocumentNumberRequest {
-  string document_number = 1;
-}
-
 message GetAvailableDriversRequest {
 }
 
@@ -71,6 +67,10 @@ message AssignDriverRequest {
 
 message UnassignDriverRequest {
   int32 driver_id = 1;
+}
+
+message GetDriverByDocumentNumberRequest {
+  string document_number = 1;
 }
 
 // Mensajes de Response

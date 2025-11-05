@@ -33,9 +33,23 @@ public class FuelRepository
         };
     }
 
+    public async Task<List<FuelRecord>> GetAllAsync()
+    {
+        return await _db.FuelRecords.ToListAsync();
+    }
+
     public async Task UpdateAsync(FuelRecord record)
     {
         _db.FuelRecords.Update(record);
         await _db.SaveChangesAsync();
+    }
+
+    public async Task<FuelRecord?> UpdateStatusAsync(int id, string estado)
+    {
+        var record = await _db.FuelRecords.FirstOrDefaultAsync(r => r.Id == id);
+        if (record == null) return null;
+        record.Estado = Enum.Parse<XYZ.FuelService.Domain.Enums.EstadoConsumo>(estado, true);
+        await _db.SaveChangesAsync();
+        return record;
     }
 }

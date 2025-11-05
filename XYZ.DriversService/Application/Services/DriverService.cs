@@ -112,11 +112,29 @@ public class DriverService : IDriverService
         if (driver == null)
             return false;
 
-        // Check if driver is currently assigned
-        if (driver.IsAssigned)
-            throw new InvalidOperationException("Cannot delete an assigned driver. Please unassign first.");
+        // If driver is assigned to a vehicle, try to clear the vehicle's assigned driver first
+        if (driver.IsAssigned && !string.IsNullOrWhiteSpace(driver.AssignedVehiclePlaca))
+        {
+            var vehiclesUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL") ?? "http://vehiclesservice:5002";
+            try
+            {
+                using var channel = Grpc.Net.Client.GrpcChannel.ForAddress(vehiclesUrl);
+                var vehiclesClient = new XYZ.VehiclesService.Protos.Vehicles.VehiclesClient(channel);
+                await vehiclesClient.SetAssignedDriverAsync(new XYZ.VehiclesService.Protos.SetAssignedDriverRequest { Placa = driver.AssignedVehiclePlaca, DriverDocument = "" });
+            }
+            catch
+            {
+                // ignore failures to clear vehicle; proceed with deletion
+            }
+        }
 
         return await _driverRepository.DeleteAsync(id);
+    }
+
+    public async Task<DriverResponseDto?> GetDriverByDocumentNumberAsync(string documentNumber)
+    {
+        var driver = await _driverRepository.GetByDocumentNumberAsync(documentNumber);
+        return driver != null ? MapToDto(driver) : null;
     }
 
     public async Task<bool> AssignDriverAsync(int driverId, string vehiclePlaca)

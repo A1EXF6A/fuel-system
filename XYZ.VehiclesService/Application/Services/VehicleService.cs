@@ -25,5 +25,35 @@ public class VehicleService : IVehicleService
 
     public Task<Vehicle?> UpdateAsync(Vehicle vehicle) => _vehicleRepo.UpdateAsync(vehicle);
 
-    public Task<bool> DeleteAsync(int id) => _vehicleRepo.DeleteAsync(id);
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var v = await _vehicleRepo.GetByIdAsync(id);
+        if (v == null)
+            return false;
+
+        // If vehicle is assigned to a driver, try to unassign the driver via DriversService
+        if (!string.IsNullOrWhiteSpace(v.AssignedDriverDocument))
+        {
+            var driversUrl = Environment.GetEnvironmentVariable("DRIVERS_SERVICE_URL") ?? "http://driversservice:5002";
+            try
+            {
+                using var channel = Grpc.Net.Client.GrpcChannel.ForAddress(driversUrl);
+                var driversClient = new XYZ.DriversService.Protos.Drivers.DriversClient(channel);
+
+                // Find driver by document
+                var getResp = await driversClient.GetDriverByDocumentNumberAsync(new XYZ.DriversService.Protos.GetDriverByDocumentNumberRequest { DocumentNumber = v.AssignedDriverDocument });
+                if (getResp != null && getResp.Driver != null)
+                {
+                    // Unassign driver
+                    await driversClient.UnassignDriverAsync(new XYZ.DriversService.Protos.UnassignDriverRequest { DriverId = getResp.Driver.Id });
+                }
+            }
+            catch
+            {
+                // ignore errors and continue with deletion
+            }
+        }
+
+        return await _vehicleRepo.DeleteAsync(id);
+    }
 }

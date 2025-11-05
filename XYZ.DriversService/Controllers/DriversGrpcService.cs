@@ -106,6 +106,30 @@ public class DriversGrpcService : Drivers.DriversBase
         }
     }
 
+    public override async Task<GetDriverResponse> GetDriverByDocumentNumber(GetDriverByDocumentNumberRequest request, ServerCallContext context)
+    {
+        try
+        {
+            _logger.LogInformation("Getting driver by document number: {DocumentNumber}", request.DocumentNumber);
+
+            var driver = await _driverService.GetDriverByDocumentNumberAsync(request.DocumentNumber);
+
+            if (driver == null)
+                throw new RpcException(new Status(StatusCode.NotFound, $"Driver with document {request.DocumentNumber} not found"));
+
+            return new GetDriverResponse { Driver = MapToProtoDriver(driver) };
+        }
+        catch (RpcException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting driver by document number: {DocumentNumber}", request.DocumentNumber);
+            throw new RpcException(new Status(StatusCode.Internal, "An error occurred while retrieving the driver by document number"));
+        }
+    }
+
     public override async Task<UpdateDriverResponse> UpdateDriver(UpdateDriverRequest request, ServerCallContext context)
     {
         try

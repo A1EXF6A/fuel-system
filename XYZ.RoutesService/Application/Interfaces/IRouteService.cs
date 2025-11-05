@@ -9,4 +9,6 @@ public interface IRouteService
     Task<Route?> GetByIdAsync(int id);
     Task<List<Route>> GetAllAsync();
     Task<Route?> UpdateStatusAsync(int id, string estado);
+    Task<Route?> UpdateAsync(int id, string nombre, string origen, string destino, string vehiclePlaca, int driverId);
+    Task<bool> DeleteAsync(int id);
 }

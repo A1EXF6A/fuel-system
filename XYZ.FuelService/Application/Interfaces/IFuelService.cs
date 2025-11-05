@@ -10,4 +10,6 @@ public interface IFuelService
     Task<FuelRecord> CreateFuelPlanAsync(string? vehiclePlaca, int driverId, int routeId);
     Task<FuelRecord?> RegisterActualConsumptionAsync(int planId, double actualLiters);
     Task<List<FuelRecord>> GetFuelReportAsync(string filterType, string filterValue);
+    Task<List<FuelRecord>> GetAllReportsAsync();
+    Task<FuelRecord?> UpdateReportStatusAsync(int id, string estado);
 }

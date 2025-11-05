@@ -15,5 +15,6 @@ public interface IDriverService
     Task<bool> DeleteDriverAsync(int id);
     Task<bool> AssignDriverAsync(int driverId, string vehiclePlaca);
     Task<bool> UnassignDriverAsync(int driverId);
+    Task<DriverResponseDto?> GetDriverByDocumentNumberAsync(string documentNumber);
     Task<bool> DriverExistsAsync(int id);
 }

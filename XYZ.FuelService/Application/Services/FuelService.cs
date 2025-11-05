@@ -105,6 +105,11 @@ public class FuelService : IFuelService
     public Task<List<FuelRecord>> GetFuelReportAsync(string filterType, string filterValue)
         => _repo.GetByFilterAsync(filterType, filterValue);
 
+    public Task<List<FuelRecord>> GetAllReportsAsync() => _repo.GetAllAsync();
+
+    public Task<FuelRecord?> UpdateReportStatusAsync(int id, string estado)
+        => _repo.UpdateStatusAsync(id, estado);
+
     // 🔸 Clases auxiliares para deserialización HTTP
     private class VehicleResponse
     {

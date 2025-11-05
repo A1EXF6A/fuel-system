@@ -69,4 +69,41 @@ public class FuelGrpcService : Fuel.FuelBase
         }));
         return resp;
     }
+
+    public override async Task<FuelReportResponse> GetAllFuelReports(EmptyRequest request, ServerCallContext context)
+    {
+        var list = await _service.GetAllReportsAsync();
+        var resp = new FuelReportResponse();
+        resp.Registros.AddRange(list.Select(f => new FuelPlanResponse
+        {
+            Id = f.Id,
+            VehiclePlaca = f.VehiclePlaca,
+            DriverId = f.DriverId,
+            RouteId = f.RouteId,
+            EstimatedLiters = f.EstimatedLiters,
+            ActualLiters = f.ActualLiters,
+            Estado = f.Estado.ToString(),
+            TipoMaquinaria = f.TipoMaquinaria
+        }));
+        return resp;
+    }
+
+    public override async Task<FuelPlanResponse> UpdateReportStatus(UpdateReportStatusRequest request, ServerCallContext context)
+    {
+        var updated = await _service.UpdateReportStatusAsync(request.Id, request.Estado);
+        if (updated == null)
+            throw new RpcException(new Status(StatusCode.NotFound, "Fuel report not found"));
+
+        return new FuelPlanResponse
+        {
+            Id = updated.Id,
+            VehiclePlaca = updated.VehiclePlaca,
+            DriverId = updated.DriverId,
+            RouteId = updated.RouteId,
+            EstimatedLiters = updated.EstimatedLiters,
+            ActualLiters = updated.ActualLiters,
+            Estado = updated.Estado.ToString(),
+            TipoMaquinaria = updated.TipoMaquinaria
+        };
+    }
 }

@@ -130,4 +130,75 @@ public class RoutesGrpcService : Routes.RoutesBase
             Estado = route.Estado.ToString()
         };
     }
+
+    public override async Task<RouteResponse> UpdateRoute(UpdateRouteRequest request, ServerCallContext context)
+    {
+        try
+        {
+            // Validate driver exists and is assigned to the provided vehicle placa
+            var driversUrl = Environment.GetEnvironmentVariable("DRIVERS_SERVICE_URL") ?? "http://driversservice:80";
+            using var chDrivers = Grpc.Net.Client.GrpcChannel.ForAddress(driversUrl);
+            var driversClient = new XYZ.DriversService.Protos.Drivers.DriversClient(chDrivers);
+            XYZ.DriversService.Protos.GetDriverResponse drvResp;
+            try
+            {
+                drvResp = await driversClient.GetDriverAsync(new XYZ.DriversService.Protos.GetDriverRequest { Id = request.DriverId });
+            }
+            catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+            {
+                throw new InvalidOperationException("Driver not found");
+            }
+
+            if (!drvResp.Driver.IsAssigned || drvResp.Driver.AssignedVehiclePlaca != request.VehiclePlaca)
+                throw new InvalidOperationException("Driver is not assigned to the specified vehicle");
+
+            // Validate vehicle exists
+            var vehiclesUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL") ?? "http://vehiclesservice:5002";
+            using var chVehicles = Grpc.Net.Client.GrpcChannel.ForAddress(vehiclesUrl);
+            var vehiclesClient = new XYZ.VehiclesService.Protos.Vehicles.VehiclesClient(chVehicles);
+            try
+            {
+                await vehiclesClient.GetVehicleByPlacaAsync(new XYZ.VehiclesService.Protos.GetVehicleByPlacaRequest { Placa = request.VehiclePlaca });
+            }
+            catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+            {
+                throw new InvalidOperationException("Vehicle not found");
+            }
+
+            var route = await _service.UpdateAsync(request.Id, request.Nombre, request.Origen, request.Destino, request.VehiclePlaca, request.DriverId);
+            if (route == null)
+                throw new RpcException(new Status(StatusCode.NotFound, "Route not found"));
+
+            return new RouteResponse
+            {
+                Id = route.Id,
+                Nombre = route.Nombre,
+                Origen = route.Origen,
+                Destino = route.Destino,
+                DistanciaKm = route.DistanciaKm,
+                DuracionMinutos = route.DuracionMinutos,
+                Estado = route.Estado.ToString(),
+                VehiclePlaca = route.VehiclePlaca,
+                DriverId = route.DriverId
+            };
+        }
+        catch (ArgumentException ex)
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, ex.Message));
+        }
+        catch (Exception ex)
+        {
+            throw new RpcException(new Status(StatusCode.Internal, ex.Message));
+        }
+    }
+
+    public override async Task<DeleteRouteResponse> DeleteRoute(DeleteRouteRequest request, ServerCallContext context)
+    {
+        var ok = await _service.DeleteAsync(request.Id);
+        return new DeleteRouteResponse { Success = ok };
+    }
 }
