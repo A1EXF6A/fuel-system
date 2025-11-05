@@ -7,6 +7,9 @@ service Vehicles {
   rpc GetVehicleByPlaca (GetVehicleByPlacaRequest) returns (VehicleResponse);
   rpc SetAssignedDriver (SetAssignedDriverRequest) returns (VehicleResponse);
   rpc GetVehicleById (GetVehicleRequest) returns (VehicleResponse);
+  // Update and delete vehicle
+  rpc UpdateVehicle (UpdateVehicleRequest) returns (VehicleResponse);
+  rpc DeleteVehicle (DeleteVehicleRequest) returns (DeleteVehicleResponse);
   rpc GetAllVehicles (EmptyRequest) returns (VehiclesListResponse);
   rpc GetVehicleTypes (EmptyRequest) returns (VehicleTypesListResponse);
 }
@@ -37,6 +40,27 @@ message SetAssignedDriverRequest {
 }
 
 message EmptyRequest {}
+
+message UpdateVehicleRequest {
+  int32 id = 1;
+  string placa = 2;
+  string chasis = 3;
+  string marca = 4;
+  string modelo = 5;
+  int32 anio = 6;
+  int32 vehicleTypeId = 7;
+  string estado = 8;
+  double km = 9;
+  string assigned_driver_document = 10;
+}
+
+message DeleteVehicleRequest {
+  int32 id = 1;
+}
+
+message DeleteVehicleResponse {
+  bool success = 1;
+}
 
 message VehicleResponse {
   int32 id = 1;

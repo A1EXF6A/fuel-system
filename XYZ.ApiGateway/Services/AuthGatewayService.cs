@@ -76,4 +76,64 @@ public class AuthGatewayService
             throw new Exception($"Token validation failed: {ex.Status.Detail}");
         }
     }
+
+    public async Task<AuthResponse> RefreshTokenAsync(string refreshToken)
+    {
+        try
+        {
+            var request = new RefreshRequest { RefreshToken = refreshToken };
+            var response = await _authClient.RefreshTokenAsync(request);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error refreshing token");
+            throw new Exception($"Refresh failed: {ex.Status.Detail}");
+        }
+    }
+
+    public async Task<ListUsersResponse> ListUsersAsync()
+    {
+        try
+        {
+            var request = new ListUsersRequest();
+            var response = await _authClient.ListUsersAsync(request);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error listing users");
+            throw;
+        }
+    }
+
+    public async Task<User> UpdateUserAsync(int id, string username, string? password, string role)
+    {
+        try
+        {
+            var request = new UpdateUserRequest { Id = id, Username = username, Password = password ?? string.Empty, Role = role };
+            var response = await _authClient.UpdateUserAsync(request);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error updating user");
+            throw;
+        }
+    }
+
+    public async Task<DeleteUserResponse> DeleteUserAsync(int id)
+    {
+        try
+        {
+            var request = new DeleteUserRequest { Id = id };
+            var response = await _authClient.DeleteUserAsync(request);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error deleting user");
+            throw;
+        }
+    }
 }

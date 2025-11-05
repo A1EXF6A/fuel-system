@@ -249,6 +249,23 @@ public class DriversGatewayService
         }
     }
 
+    public async Task<GetDriverResponse> GetDriverByDocumentNumberAsync(string documentNumber)
+    {
+        try
+        {
+            var request = new GetDriverByDocumentNumberRequest { DocumentNumber = documentNumber };
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.GetDriverByDocumentNumberAsync(request, metadata);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            // If the RPC is not implemented, return null-like behavior via exception
+            _logger.LogError(ex, "Error getting driver by document number: {DocumentNumber}", documentNumber);
+            throw new Exception($"Failed to get driver by document number: {ex.Status.Detail}");
+        }
+    }
+
     private Metadata? BuildAuthMetadata()
     {
         try

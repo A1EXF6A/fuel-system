@@ -1,0 +1,203 @@
+BASE URL: http://localhost:5010
+
+INSTRUCCIONES GENERALES:
+- Sustituye <TOKEN> por el token JWT obtenido en el paso de login.
+- Sustituye los placeholders <driverId>, <vehicleId>, <vehiclePlaca>, <routeId>, <planId> según las respuestas que devuelva el gateway.
+- Puedes usar curl o PowerShell Invoke-RestMethod. En Windows PowerShell las comillas JSON se pasan tal cual.
+
+1) LOGIN (obtener token)
+POST /api/auth/login
+Headers: Content-Type: application/json
+Body:
+{
+  "Username": "admin",
+  "Password": "admin123"
+}
+
+Ejemplo curl:
+curl -s -X POST "http://localhost:5010/api/auth/login" -H "Content-Type: application/json" -d "{\"Username\":\"admin\",\"Password\":\"admin123\"}"
+
+Ejemplo PowerShell:
+Invoke-RestMethod -Method Post -Uri "http://localhost:5010/api/auth/login" -Body '{"Username":"admin","Password":"admin123"}' -ContentType 'application/json'
+
+---
+2) LIST USERS
+GET /api/auth/users
+Headers: Authorization: Bearer <TOKEN>
+
+curl:
+curl -s -H "Authorization: Bearer <TOKEN>" "http://localhost:5010/api/auth/users"
+
+PowerShell:
+Invoke-RestMethod -Method Get -Uri "http://localhost:5010/api/auth/users" -Headers @{ Authorization = "Bearer <TOKEN>" }
+
+---
+3) CREATE DRIVER
+POST /api/drivers
+Headers: Authorization: Bearer <TOKEN>, Content-Type: application/json
+Body (ejemplo):
+{
+  "FirstName": "Test",
+  "LastName": "Driver",
+  "DocumentNumber": "99999999",
+  "PhoneNumber": "+1000000000",
+  "Email": "test.driver@x.com",
+  "LicenseNumber": "LIC999",
+  "LicenseCategory": 2,
+  "LicenseExpiryDate": "2028-11-05T00:00:00",
+  "DriverType": 1,
+  "HireDate": "2025-11-05T00:00:00"
+}
+
+Respuesta esperada contiene: driver.id (guardar como <driverId>)
+
+curl:
+curl -s -X POST "http://localhost:5010/api/drivers" -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d @- <<'JSON'
+{ "FirstName":"Test","LastName":"Driver","DocumentNumber":"99999999","PhoneNumber":"+1000000000","Email":"test.driver@x.com","LicenseNumber":"LIC999","LicenseCategory":2,"LicenseExpiryDate":"2028-11-05T00:00:00","DriverType":1,"HireDate":"2025-11-05T00:00:00" }
+JSON
+
+PowerShell:
+Invoke-RestMethod -Method Post -Uri "http://localhost:5010/api/drivers" -Headers @{ Authorization = "Bearer <TOKEN>" } -Body '{"FirstName":"Test","LastName":"Driver","DocumentNumber":"99999999","PhoneNumber":"+1000000000","Email":"test.driver@x.com","LicenseNumber":"LIC999","LicenseCategory":2,"LicenseExpiryDate":"2028-11-05T00:00:00","DriverType":1,"HireDate":"2025-11-05T00:00:00"}' -ContentType 'application/json'
+
+---
+4) CREATE VEHICLE
+POST /api/vehicles
+Headers: Authorization: Bearer <TOKEN>, Content-Type: application/json
+Body (ejemplo):
+{
+  "placa": "ZZZ-999",
+  "chasis": "CHASSIS123",
+  "marca": "MarcaX",
+  "modelo": "ModeloX",
+  "anio": 2020,
+  "vehicleTypeId": 1,
+  "estado": "Operativo",
+  "km": 1000.0,
+  "assigned_driver_document": ""
+}
+
+Respuesta esperada: objeto vehículo con `id` y `placa` (guardar <vehicleId> y <vehiclePlaca>)
+
+curl:
+curl -s -X POST "http://localhost:5010/api/vehicles" -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d @- <<'JSON'
+{ "placa":"ZZZ-999","chasis":"CHASSIS123","marca":"MarcaX","modelo":"ModeloX","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":1000.0,"assigned_driver_document":"" }
+JSON
+
+PowerShell:
+Invoke-RestMethod -Method Post -Uri "http://localhost:5010/api/vehicles" -Headers @{ Authorization = "Bearer <TOKEN>" } -Body '{"placa":"ZZZ-999","chasis":"CHASSIS123","marca":"MarcaX","modelo":"ModeloX","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":1000.0,"assigned_driver_document":""}' -ContentType 'application/json'
+
+---
+5) ASSIGN DRIVER to VEHICLE (vía Drivers endpoint)
+POST /api/drivers/{driverId}/assign
+Headers: Authorization: Bearer <TOKEN>, Content-Type: application/json
+Body:
+{ "VehiclePlaca": "<vehiclePlaca>" }
+
+Ejemplo curl:
+curl -s -X POST "http://localhost:5010/api/drivers/<driverId>/assign" -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d "{\"VehiclePlaca\":\"<vehiclePlaca>\"}"
+
+PowerShell:
+Invoke-RestMethod -Method Post -Uri "http://localhost:5010/api/drivers/<driverId>/assign" -Headers @{ Authorization = "Bearer <TOKEN>" } -Body '{"VehiclePlaca":"<vehiclePlaca>"}' -ContentType 'application/json'
+
+Respuesta esperada: { success: true }
+
+---
+6) CREATE ROUTE
+POST /api/routes
+Headers: Authorization: Bearer <TOKEN>, Content-Type: application/json
+Body:
+{
+  "Nombre": "Quito - Cuenca Test",
+  "Origen": "Quito, Ecuador",
+  "Destino": "Cuenca, Ecuador",
+  "VehiclePlaca": "<vehiclePlaca>",
+  "DriverId": <driverId>
+}
+
+Respuesta esperada: objeto ruta con `id` (guardar <routeId>)
+
+curl example:
+curl -s -X POST "http://localhost:5010/api/routes" -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d @- <<'JSON'
+{ "Nombre":"Quito - Cuenca Test","Origen":"Quito, Ecuador","Destino":"Cuenca, Ecuador","VehiclePlaca":"<vehiclePlaca>","DriverId":<driverId> }
+JSON
+
+PowerShell example:
+Invoke-RestMethod -Method Post -Uri "http://localhost:5010/api/routes" -Headers @{ Authorization = "Bearer <TOKEN>" } -Body '{"Nombre":"Quito - Cuenca Test","Origen":"Quito, Ecuador","Destino":"Cuenca, Ecuador","VehiclePlaca":"<vehiclePlaca>","DriverId":<driverId>}' -ContentType 'application/json'
+
+---
+7) CREATE FUEL PLAN (estimado)
+POST /api/fuel/plan
+Headers: Authorization: Bearer <TOKEN>, Content-Type: application/json
+Body:
+{
+  "VehiclePlaca": "<vehiclePlaca>",
+  "DriverId": <driverId>,
+  "RouteId": <routeId>
+}
+
+Respuesta esperada: FuelPlanResponse con `id` (guardar <planId>)
+
+---
+8) REGISTER ACTUAL CONSUMPTION
+POST /api/fuel/register
+Headers: Authorization: Bearer <TOKEN>, Content-Type: application/json
+Body:
+{
+  "PlanId": <planId>,
+  "ActualLiters": 50.0
+}
+
+Respuesta esperada: FuelPlanResponse actualizado con actualLiters
+
+---
+9) GET ALL FUEL REPORTS
+GET /api/fuel/reports
+Headers: Authorization: Bearer <TOKEN>
+
+curl:
+curl -s -H "Authorization: Bearer <TOKEN>" "http://localhost:5010/api/fuel/reports"
+
+PowerShell:
+Invoke-RestMethod -Method Get -Uri "http://localhost:5010/api/fuel/reports" -Headers @{ Authorization = "Bearer <TOKEN>" }
+
+---
+10) GET FILTERED REPORT (por vehicle)
+POST /api/fuel/report
+Headers: Authorization: Bearer <TOKEN>, Content-Type: application/json
+Body:
+{
+  "FilterType": "vehicle",
+  "FilterValue": "<vehiclePlaca>"
+}
+
+---
+11) DELETE VEHICLE
+DELETE /api/vehicles/{vehicleId}
+Headers: Authorization: Bearer <TOKEN>
+
+curl:
+curl -s -X DELETE "http://localhost:5010/api/vehicles/<vehicleId>" -H "Authorization: Bearer <TOKEN>"
+
+PowerShell:
+Invoke-RestMethod -Method Delete -Uri "http://localhost:5010/api/vehicles/<vehicleId>" -Headers @{ Authorization = "Bearer <TOKEN>" }
+
+Respuesta esperada: { success: true }
+
+---
+12) GET DRIVER AFTER VEHICLE DELETE (verificar desasignación)
+GET /api/drivers/{driverId}
+Headers: Authorization: Bearer <TOKEN>
+
+Objetivo: comprobar que `isAssigned` == false y `assignedVehiclePlaca` == "" or null.
+
+curl:
+curl -s -H "Authorization: Bearer <TOKEN>" "http://localhost:5010/api/drivers/<driverId>"
+
+PowerShell:
+Invoke-RestMethod -Method Get -Uri "http://localhost:5010/api/drivers/<driverId>" -Headers @{ Authorization = "Bearer <TOKEN>" }
+
+---
+Notas finales:
+- Algunos endpoints pueden devolver objetos anidados; adapta la extracción de IDs según la respuesta real (p.ej. response.driver.id o response.id).
+- Si tienes rutas protegidas adicionalmente, asegúrate de pasar el header Authorization.
+- Si prefieres, puedo ejecutar estas llamadas una por una desde aquí y devolverte las respuestas; confirma y continuaré.

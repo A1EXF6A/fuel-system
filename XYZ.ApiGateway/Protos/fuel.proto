@@ -6,6 +6,8 @@ service Fuel {
   rpc CreateFuelPlan (FuelPlanRequest) returns (FuelPlanResponse);
   rpc RegisterActualConsumption (ActualConsumptionRequest) returns (FuelPlanResponse);
   rpc GetFuelReport (FuelReportRequest) returns (FuelReportResponse);
+  rpc GetAllFuelReports (EmptyRequest) returns (FuelReportResponse);
+  rpc UpdateReportStatus (UpdateReportStatusRequest) returns (FuelPlanResponse);
 }
 
 message FuelPlanRequest {
@@ -37,4 +39,11 @@ message FuelReportRequest {
 
 message FuelReportResponse {
   repeated FuelPlanResponse registros = 1;
+}
+
+message EmptyRequest {}
+
+message UpdateReportStatusRequest {
+  int32 id = 1;
+  string estado = 2;
 }

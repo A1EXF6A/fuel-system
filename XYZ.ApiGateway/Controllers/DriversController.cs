@@ -151,6 +151,42 @@ public class DriversController : ControllerBase
         }
     }
 
+    [HttpGet("by-document/{documentNumber}")]
+    public async Task<IActionResult> GetDriverByDocument(string documentNumber)
+    {
+        try
+        {
+            var response = await _driversService.GetDriverByDocumentNumberAsync(documentNumber);
+            var d = response.Driver;
+            var driver = new
+            {
+                id = d.Id,
+                firstName = d.FirstName,
+                lastName = d.LastName,
+                documentNumber = d.DocumentNumber,
+                phoneNumber = d.PhoneNumber,
+                email = d.Email,
+                licenseNumber = d.LicenseNumber,
+                licenseCategory = d.LicenseCategory,
+                licenseExpiryDate = d.LicenseExpiryDate.ToDateTime(),
+                driverType = d.DriverType,
+                status = d.Status,
+                hireDate = d.HireDate.ToDateTime(),
+                createdAt = d.CreatedAt.ToDateTime(),
+                updatedAt = d.UpdatedAt.ToDateTime(),
+                isAssigned = d.IsAssigned,
+                assignedVehiclePlaca = d.AssignedVehiclePlaca,
+                assignmentDate = d.AssignmentDate?.ToDateTime()
+            };
+
+            return Ok(driver);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateDriver([FromBody] CreateDriverRequestDto request)
     {

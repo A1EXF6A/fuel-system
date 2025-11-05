@@ -13,6 +13,7 @@ service Drivers {
   rpc GetAllDrivers(GetAllDriversRequest) returns (GetAllDriversResponse);
   rpc UpdateDriver(UpdateDriverRequest) returns (UpdateDriverResponse);
   rpc DeleteDriver(DeleteDriverRequest) returns (DeleteDriverResponse);
+  rpc GetDriverByDocumentNumber(GetDriverByDocumentNumberRequest) returns (GetDriverResponse);
   rpc RestoreDriver(RestoreDriverRequest) returns (RestoreDriverResponse);
   rpc GetDeletedDrivers(GetDeletedDriversRequest) returns (GetDeletedDriversResponse);
   rpc HardDeleteDriver(HardDeleteDriverRequest) returns (HardDeleteDriverResponse);
@@ -59,6 +60,10 @@ message DeleteDriverRequest {
   int32 id = 1;
   string deleted_by = 2;
   string reason = 3;
+}
+
+message GetDriverByDocumentNumberRequest {
+  string document_number = 1;
 }
 
 message RestoreDriverRequest {

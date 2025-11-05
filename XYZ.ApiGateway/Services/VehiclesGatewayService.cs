@@ -96,6 +96,37 @@ public class VehiclesGatewayService
         }
     }
 
+    public async Task<VehicleResponse> UpdateVehicleAsync(UpdateVehicleRequest request)
+    {
+        try
+        {
+            var metadata = BuildAuthMetadata();
+            var response = await _vehiclesClient.UpdateVehicleAsync(request, metadata);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error updating vehicle with ID: {Id}", request.Id);
+            throw;
+        }
+    }
+
+    public async Task<DeleteVehicleResponse> DeleteVehicleAsync(int id)
+    {
+        try
+        {
+            var request = new DeleteVehicleRequest { Id = id };
+            var metadata = BuildAuthMetadata();
+            var response = await _vehiclesClient.DeleteVehicleAsync(request, metadata);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error deleting vehicle with ID: {Id}", id);
+            throw;
+        }
+    }
+
     public async Task<VehicleTypesListResponse> GetVehicleTypesAsync()
     {
         try

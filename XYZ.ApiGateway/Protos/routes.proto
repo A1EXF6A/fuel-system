@@ -5,6 +5,8 @@ option csharp_namespace = "XYZ.RoutesService.Protos";
 service Routes {
   rpc CreateRoute (CreateRouteRequest) returns (RouteResponse);
   rpc GetRouteById (GetRouteRequest) returns (RouteResponse);
+  rpc UpdateRoute (UpdateRouteRequest) returns (RouteResponse);
+  rpc DeleteRoute (DeleteRouteRequest) returns (DeleteRouteResponse);
   rpc GetAllRoutes (EmptyRequest) returns (RoutesListResponse);
   rpc UpdateRouteStatus (UpdateRouteStatusRequest) returns (RouteResponse);
 }
@@ -19,6 +21,23 @@ message CreateRouteRequest {
 
 message GetRouteRequest {
   int32 id = 1;
+}
+
+message UpdateRouteRequest {
+  int32 id = 1;
+  string nombre = 2;
+  string origen = 3;
+  string destino = 4;
+  string vehicle_placa = 5;
+  int32 driverId = 6;
+}
+
+message DeleteRouteRequest {
+  int32 id = 1;
+}
+
+message DeleteRouteResponse {
+  bool success = 1;
 }
 
 message UpdateRouteStatusRequest {

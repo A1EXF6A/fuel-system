@@ -92,6 +92,49 @@ public class VehiclesController : ControllerBase
         }
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateVehicle(int id, [FromBody] UpdateVehicleRequest request)
+    {
+        try
+        {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
+            // Ensure id consistency
+            request.Id = id;
+
+            var response = await _vehiclesService.UpdateVehicleAsync(request);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteVehicle(int id)
+    {
+        try
+        {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
+            var response = await _vehiclesService.DeleteVehicleAsync(id);
+            return Ok(new { success = response.Success });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("{placa}/assign")]
     public async Task<IActionResult> SetAssignedDriver(string placa, [FromBody] SetAssignedDriverDto dto)
     {

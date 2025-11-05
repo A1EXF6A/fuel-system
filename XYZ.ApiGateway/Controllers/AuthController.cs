@@ -76,8 +76,72 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Could not validate token. Please try again." });
         }
     }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequestDto request)
+    {
+        try
+        {
+            var response = await _authService.RefreshTokenAsync(request.RefreshToken);
+            return Ok(new
+            {
+                token = response.Token,
+                refreshToken = response.RefreshToken,
+                role = response.Role
+            });
+        }
+        catch (Exception)
+        {
+            return BadRequest(new { message = "Could not refresh token. Please try again." });
+        }
+    }
+
+    [HttpGet("users")]
+    public async Task<IActionResult> ListUsers()
+    {
+        try
+        {
+            var resp = await _authService.ListUsersAsync();
+            var users = resp.Users.Select(u => new { id = u.Id, username = u.Username, role = u.Role });
+            return Ok(users);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("users/{id}")]
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto request)
+    {
+        try
+        {
+            var user = await _authService.UpdateUserAsync(id, request.Username, request.Password, request.Role);
+            return Ok(new { id = user.Id, username = user.Username, role = user.Role });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("users/{id}")]
+    public async Task<IActionResult> DeleteUser(int id)
+    {
+        try
+        {
+            var resp = await _authService.DeleteUserAsync(id);
+            return Ok(new { success = resp.Success });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
 
 public record LoginRequestDto(string Username, string Password);
 public record RegisterRequestDto(string Username, string Password, string Role);
 public record ValidateTokenRequestDto(string Token);
+public record RefreshRequestDto(string RefreshToken);
+public record UpdateUserDto(string Username, string? Password, string Role);

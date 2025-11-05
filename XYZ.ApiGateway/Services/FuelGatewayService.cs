@@ -67,6 +67,38 @@ public class FuelGatewayService
         }
     }
 
+    public async Task<FuelReportResponse> GetAllFuelReportsAsync()
+    {
+        try
+        {
+            var request = new EmptyRequest();
+            var metadata = BuildAuthMetadata();
+            var response = await _fuelClient.GetAllFuelReportsAsync(request, metadata);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error getting all fuel reports");
+            throw;
+        }
+    }
+
+    public async Task<FuelPlanResponse> UpdateReportStatusAsync(int id, string estado)
+    {
+        try
+        {
+            var request = new UpdateReportStatusRequest { Id = id, Estado = estado };
+            var metadata = BuildAuthMetadata();
+            var response = await _fuelClient.UpdateReportStatusAsync(request, metadata);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error updating report status for id {Id}", id);
+            throw;
+        }
+    }
+
     private Metadata? BuildAuthMetadata()
     {
         try

@@ -66,6 +66,52 @@ public class RoutesGatewayService
         }
     }
 
+    public async Task<RouteResponse> UpdateRouteAsync(UpdateRouteRequest request)
+    {
+        try
+        {
+            var metadata = BuildAuthMetadata();
+            var response = await _routesClient.UpdateRouteAsync(request, metadata);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error updating route with ID: {Id}", request.Id);
+            throw;
+        }
+    }
+
+    public async Task<DeleteRouteResponse> DeleteRouteAsync(int id)
+    {
+        try
+        {
+            var request = new DeleteRouteRequest { Id = id };
+            var metadata = BuildAuthMetadata();
+            var response = await _routesClient.DeleteRouteAsync(request, metadata);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error deleting route with ID: {Id}", id);
+            throw;
+        }
+    }
+
+    public async Task<RouteResponse> UpdateRouteStatusAsync(UpdateRouteStatusRequest request)
+    {
+        try
+        {
+            var metadata = BuildAuthMetadata();
+            var response = await _routesClient.UpdateRouteStatusAsync(request, metadata);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "Error updating route status for ID: {Id}", request.Id);
+            throw;
+        }
+    }
+
     private Metadata? BuildAuthMetadata()
     {
         try

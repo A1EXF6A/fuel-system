@@ -7,6 +7,10 @@ service Auth {
   rpc Register (RegisterRequest) returns (AuthResponse);
   rpc ValidateToken (ValidateRequest) returns (ValidateResponse);
   rpc RefreshToken (RefreshRequest) returns (AuthResponse);
+  // User management
+  rpc ListUsers (ListUsersRequest) returns (ListUsersResponse);
+  rpc UpdateUser (UpdateUserRequest) returns (User);
+  rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse);
 }
 
 message LoginRequest {
@@ -37,4 +41,31 @@ message ValidateResponse {
 
 message RefreshRequest {
   string refreshToken = 1;
+}
+
+message ListUsersRequest {}
+
+message User {
+  int32 id = 1;
+  string username = 2;
+  string role = 3;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+}
+
+message UpdateUserRequest {
+  int32 id = 1;
+  string username = 2;
+  string password = 3;
+  string role = 4;
+}
+
+message DeleteUserRequest {
+  int32 id = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
 }
