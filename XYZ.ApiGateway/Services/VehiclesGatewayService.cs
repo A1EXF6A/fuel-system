@@ -8,13 +8,15 @@ public class VehiclesGatewayService
 {
     private readonly Vehicles.VehiclesClient _vehiclesClient;
     private readonly ILogger<VehiclesGatewayService> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public VehiclesGatewayService(IConfiguration configuration, ILogger<VehiclesGatewayService> logger)
+    public VehiclesGatewayService(IConfiguration configuration, ILogger<VehiclesGatewayService> logger, IHttpContextAccessor httpContextAccessor)
     {
         var vehiclesServiceUrl = configuration.GetValue<string>("Services:VehiclesService");
         var channel = GrpcChannel.ForAddress(vehiclesServiceUrl!);
         _vehiclesClient = new Vehicles.VehiclesClient(channel);
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<VehicleResponse> GetVehicleByPlacaAsync(string placa)
@@ -51,7 +53,8 @@ public class VehiclesGatewayService
         try
         {
             var request = new EmptyRequest();
-            var response = await _vehiclesClient.GetAllVehiclesAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _vehiclesClient.GetAllVehiclesAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -66,7 +69,8 @@ public class VehiclesGatewayService
         try
         {
             var request = new SetAssignedDriverRequest { Placa = placa, DriverDocument = driverDocument };
-            var response = await _vehiclesClient.SetAssignedDriverAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _vehiclesClient.SetAssignedDriverAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -81,7 +85,8 @@ public class VehiclesGatewayService
         try
         {
             var request = new GetVehicleRequest { Id = id };
-            var response = await _vehiclesClient.GetVehicleByIdAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _vehiclesClient.GetVehicleByIdAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -96,7 +101,8 @@ public class VehiclesGatewayService
         try
         {
             var request = new EmptyRequest();
-            var response = await _vehiclesClient.GetVehicleTypesAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _vehiclesClient.GetVehicleTypesAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -104,5 +110,21 @@ public class VehiclesGatewayService
             _logger.LogError(ex, "Error getting vehicle types");
             throw;
         }
+    }
+
+    private Metadata? BuildAuthMetadata()
+    {
+        try
+        {
+            var auth = _httpContextAccessor.HttpContext?.Request?.Headers["Authorization"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(auth))
+            {
+                var metadata = new Metadata();
+                metadata.Add("Authorization", auth);
+                return metadata;
+            }
+        }
+        catch { }
+        return null;
     }
 }

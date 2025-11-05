@@ -10,10 +10,12 @@ namespace XYZ.ApiGateway.Controllers;
 public class FuelController : ControllerBase
 {
     private readonly FuelGatewayService _fuelService;
+    private readonly DriversGatewayService _driversService;
 
-    public FuelController(FuelGatewayService fuelService)
+    public FuelController(FuelGatewayService fuelService, DriversGatewayService driversService)
     {
         _fuelService = fuelService;
+        _driversService = driversService;
     }
 
     [HttpPost("plan")]
@@ -21,6 +23,12 @@ public class FuelController : ControllerBase
     {
         try
         {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var response = await _fuelService.CreateFuelPlanAsync(dto.VehiclePlaca, dto.DriverId, dto.RouteId);
             return Ok(response);
         }
@@ -35,6 +43,12 @@ public class FuelController : ControllerBase
     {
         try
         {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var response = await _fuelService.RegisterActualConsumptionAsync(dto.PlanId, dto.ActualLiters);
             return Ok(response);
         }
@@ -49,8 +63,35 @@ public class FuelController : ControllerBase
     {
         try
         {
-            var response = await _fuelService.GetFuelReportAsync(dto.FilterType, dto.FilterValue);
-            return Ok(response);
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(role, "Supervisor", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = await _fuelService.GetFuelReportAsync(dto.FilterType, dto.FilterValue);
+                return Ok(response);
+            }
+
+            if (string.Equals(role, "Operador", StringComparison.OrdinalIgnoreCase))
+            {
+                // Operators can only request reports for their assigned vehicle
+                if (!string.Equals(dto.FilterType, "vehicle", StringComparison.OrdinalIgnoreCase))
+                    return Forbid();
+
+                var username = User.Identity?.Name ?? string.Empty;
+                var driversResp = await _driversService.GetAllDriversAsync();
+                var driver = driversResp.Drivers.FirstOrDefault(d => d.DocumentNumber == username);
+                if (driver == null || string.IsNullOrEmpty(driver.AssignedVehiclePlaca))
+                    return Forbid();
+
+                if (!string.Equals(driver.AssignedVehiclePlaca, dto.FilterValue, StringComparison.OrdinalIgnoreCase))
+                    return Forbid();
+
+                var response = await _fuelService.GetFuelReportAsync(dto.FilterType, dto.FilterValue);
+                return Ok(response);
+            }
+
+            return Forbid();
         }
         catch (Exception ex)
         {

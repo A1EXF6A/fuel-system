@@ -8,20 +8,23 @@ public class RoutesGatewayService
 {
     private readonly Routes.RoutesClient _routesClient;
     private readonly ILogger<RoutesGatewayService> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public RoutesGatewayService(IConfiguration configuration, ILogger<RoutesGatewayService> logger)
+    public RoutesGatewayService(IConfiguration configuration, ILogger<RoutesGatewayService> logger, IHttpContextAccessor httpContextAccessor)
     {
         var routesServiceUrl = configuration.GetValue<string>("Services:RoutesService");
         var channel = GrpcChannel.ForAddress(routesServiceUrl!);
         _routesClient = new Routes.RoutesClient(channel);
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<RouteResponse> CreateRouteAsync(CreateRouteRequest request)
     {
         try
         {
-            var response = await _routesClient.CreateRouteAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _routesClient.CreateRouteAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -36,7 +39,8 @@ public class RoutesGatewayService
         try
         {
             var request = new GetRouteRequest { Id = id };
-            var response = await _routesClient.GetRouteByIdAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _routesClient.GetRouteByIdAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -51,7 +55,8 @@ public class RoutesGatewayService
         try
         {
             var request = new EmptyRequest();
-            var response = await _routesClient.GetAllRoutesAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _routesClient.GetAllRoutesAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -59,5 +64,21 @@ public class RoutesGatewayService
             _logger.LogError(ex, "Error getting all routes");
             throw;
         }
+    }
+
+    private Metadata? BuildAuthMetadata()
+    {
+        try
+        {
+            var auth = _httpContextAccessor.HttpContext?.Request?.Headers["Authorization"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(auth))
+            {
+                var metadata = new Metadata();
+                metadata.Add("Authorization", auth);
+                return metadata;
+            }
+        }
+        catch { }
+        return null;
     }
 }

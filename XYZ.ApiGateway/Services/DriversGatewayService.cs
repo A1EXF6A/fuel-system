@@ -9,13 +9,15 @@ public class DriversGatewayService
 {
     private readonly Drivers.DriversClient _driversClient;
     private readonly ILogger<DriversGatewayService> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public DriversGatewayService(IConfiguration configuration, ILogger<DriversGatewayService> logger)
+    public DriversGatewayService(IConfiguration configuration, ILogger<DriversGatewayService> logger, IHttpContextAccessor httpContextAccessor)
     {
         var driversServiceUrl = configuration.GetValue<string>("Services:DriversService");
         var channel = GrpcChannel.ForAddress(driversServiceUrl!);
         _driversClient = new Drivers.DriversClient(channel);
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<GetAllDriversResponse> GetAllDriversAsync()
@@ -23,7 +25,8 @@ public class DriversGatewayService
         try
         {
             var request = new GetAllDriversRequest();
-            var response = await _driversClient.GetAllDriversAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.GetAllDriversAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -38,7 +41,8 @@ public class DriversGatewayService
         try
         {
             var request = new GetDriverRequest { Id = id };
-            var response = await _driversClient.GetDriverAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.GetDriverAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -69,7 +73,8 @@ public class DriversGatewayService
                 HireDate = Timestamp.FromDateTime(hireDate.ToUniversalTime())
             };
 
-            var response = await _driversClient.CreateDriverAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.CreateDriverAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -100,7 +105,8 @@ public class DriversGatewayService
                 Status = status
             };
 
-            var response = await _driversClient.UpdateDriverAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.UpdateDriverAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -115,7 +121,8 @@ public class DriversGatewayService
         try
         {
             var request = new GetAvailableDriversRequest();
-            var response = await _driversClient.GetAvailableDriversAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.GetAvailableDriversAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -135,7 +142,8 @@ public class DriversGatewayService
                 VehiclePlaca = vehiclePlaca
             };
 
-            var response = await _driversClient.AssignDriverAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.AssignDriverAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -154,7 +162,8 @@ public class DriversGatewayService
                 DriverId = driverId
             };
 
-            var response = await _driversClient.UnassignDriverAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.UnassignDriverAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -174,7 +183,8 @@ public class DriversGatewayService
                 DeletedBy = deletedBy,
                 Reason = reason ?? string.Empty
             };
-            var response = await _driversClient.DeleteDriverAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.DeleteDriverAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -189,7 +199,8 @@ public class DriversGatewayService
         try
         {
             var request = new RestoreDriverRequest { Id = id };
-            var response = await _driversClient.RestoreDriverAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.RestoreDriverAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -204,7 +215,8 @@ public class DriversGatewayService
         try
         {
             var request = new GetDeletedDriversRequest();
-            var response = await _driversClient.GetDeletedDriversAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.GetDeletedDriversAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -226,7 +238,8 @@ public class DriversGatewayService
         try
         {
             var request = new HardDeleteDriverRequest { Id = id };
-            var response = await _driversClient.HardDeleteDriverAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _driversClient.HardDeleteDriverAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
@@ -234,5 +247,21 @@ public class DriversGatewayService
             _logger.LogError(ex, "Error hard deleting driver with ID: {DriverId}", id);
             throw new Exception($"Failed to hard delete driver: {ex.Status.Detail}");
         }
+    }
+
+    private Metadata? BuildAuthMetadata()
+    {
+        try
+        {
+            var auth = _httpContextAccessor.HttpContext?.Request?.Headers["Authorization"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(auth))
+            {
+                var metadata = new Metadata();
+                metadata.Add("Authorization", auth);
+                return metadata;
+            }
+        }
+        catch { }
+        return null;
     }
 }

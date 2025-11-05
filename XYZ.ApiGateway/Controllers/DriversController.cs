@@ -21,8 +21,44 @@ public class DriversController : ControllerBase
     {
         try
         {
-            var response = await _driversService.GetAllDriversAsync();
-            var drivers = response.Drivers.Select(d => new
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (string.Equals(role, "Operador", StringComparison.OrdinalIgnoreCase))
+            {
+                var username = User.Identity?.Name ?? string.Empty;
+                var response = await _driversService.GetAllDriversAsync();
+                var driver = response.Drivers.FirstOrDefault(d => d.DocumentNumber == username);
+                if (driver == null)
+                {
+                    return Ok(new object[0]);
+                }
+
+                var d = new
+                {
+                    id = driver.Id,
+                    firstName = driver.FirstName,
+                    lastName = driver.LastName,
+                    documentNumber = driver.DocumentNumber,
+                    phoneNumber = driver.PhoneNumber,
+                    email = driver.Email,
+                    licenseNumber = driver.LicenseNumber,
+                    licenseCategory = driver.LicenseCategory,
+                    licenseExpiryDate = driver.LicenseExpiryDate.ToDateTime(),
+                    driverType = driver.DriverType,
+                    status = driver.Status,
+                    hireDate = driver.HireDate.ToDateTime(),
+                    createdAt = driver.CreatedAt.ToDateTime(),
+                    updatedAt = driver.UpdatedAt.ToDateTime(),
+                    isAssigned = driver.IsAssigned,
+                    assignedVehiclePlaca = driver.AssignedVehiclePlaca,
+                    assignmentDate = driver.AssignmentDate?.ToDateTime()
+                };
+
+                return Ok(new[] { d });
+            }
+
+            var responseAll = await _driversService.GetAllDriversAsync();
+            var drivers = responseAll.Drivers.Select(d => new
             {
                 id = d.Id,
                 firstName = d.FirstName,
@@ -131,6 +167,12 @@ public class DriversController : ControllerBase
                 return BadRequest(new { message = "Invalid hire date format" });
             }
 
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var response = await _driversService.CreateDriverAsync(
                 request.FirstName,
                 request.LastName,
@@ -174,6 +216,12 @@ public class DriversController : ControllerBase
                 return BadRequest(new { message = "Invalid license expiry date format" });
             }
 
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var response = await _driversService.UpdateDriverAsync(
                 id,
                 request.FirstName,
@@ -210,6 +258,12 @@ public class DriversController : ControllerBase
     {
         try
         {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             // Validar que se proporcione la información requerida
             if (request == null || string.IsNullOrWhiteSpace(request.DeletedBy))
             {
@@ -233,6 +287,12 @@ public class DriversController : ControllerBase
     {
         try
         {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var response = await _driversService.AssignDriverAsync(id, request.VehiclePlaca);
             return Ok(new { success = response.Success });
         }
@@ -247,6 +307,12 @@ public class DriversController : ControllerBase
     {
         try
         {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var response = await _driversService.UnassignDriverAsync(id);
             return Ok(new { success = response.Success });
         }
@@ -261,6 +327,12 @@ public class DriversController : ControllerBase
     {
         try
         {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var response = await _driversService.RestoreDriverAsync(id);
             return Ok(new { success = response.Success });
         }
@@ -314,6 +386,12 @@ public class DriversController : ControllerBase
     {
         try
         {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var response = await _driversService.HardDeleteDriverAsync(id);
             return Ok(new { success = response.Success });
         }

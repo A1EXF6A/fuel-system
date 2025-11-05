@@ -37,6 +37,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Make HttpContext accessible to services (needed to forward Authorization header)
+builder.Services.AddHttpContextAccessor();
+
 // Dependency Injection for Gateway Services
 builder.Services.AddScoped<AuthGatewayService>();
 builder.Services.AddScoped<DriversGatewayService>();

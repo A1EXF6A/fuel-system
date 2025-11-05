@@ -11,10 +11,12 @@ namespace XYZ.ApiGateway.Controllers;
 public class RoutesController : ControllerBase
 {
     private readonly RoutesGatewayService _routesService;
+    private readonly DriversGatewayService _driversService;
 
-    public RoutesController(RoutesGatewayService routesService)
+    public RoutesController(RoutesGatewayService routesService, DriversGatewayService driversService)
     {
         _routesService = routesService;
+        _driversService = driversService;
     }
 
     [HttpPost]
@@ -31,6 +33,12 @@ public class RoutesController : ControllerBase
                 DriverId = request.DriverId
             };
 
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var response = await _routesService.CreateRouteAsync(grpcReq);
             return Ok(response);
         }
@@ -45,8 +53,31 @@ public class RoutesController : ControllerBase
     {
         try
         {
-            var response = await _routesService.GetAllRoutesAsync();
-            return Ok(response);
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(role, "Supervisor", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = await _routesService.GetAllRoutesAsync();
+                return Ok(response);
+            }
+
+            if (string.Equals(role, "Operador", StringComparison.OrdinalIgnoreCase))
+            {
+                var username = User.Identity?.Name ?? string.Empty;
+                var driversResp = await _driversService.GetAllDriversAsync();
+                var driver = driversResp.Drivers.FirstOrDefault(d => d.DocumentNumber == username);
+                if (driver == null || string.IsNullOrEmpty(driver.AssignedVehiclePlaca))
+                {
+                    return Ok(new { Routes = new object[0] });
+                }
+
+                var all = await _routesService.GetAllRoutesAsync();
+                var filtered = all.Routes.Where(r => r.VehiclePlaca == driver.AssignedVehiclePlaca).ToList();
+                return Ok(new { Routes = filtered });
+            }
+
+            return Forbid();
         }
         catch (Exception ex)
         {
@@ -60,6 +91,24 @@ public class RoutesController : ControllerBase
         try
         {
             var response = await _routesService.GetRouteByIdAsync(id);
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (string.Equals(role, "Operador", StringComparison.OrdinalIgnoreCase))
+            {
+                var username = User.Identity?.Name ?? string.Empty;
+                var driversResp = await _driversService.GetAllDriversAsync();
+                var driver = driversResp.Drivers.FirstOrDefault(d => d.DocumentNumber == username);
+                if (driver == null || string.IsNullOrEmpty(driver.AssignedVehiclePlaca))
+                {
+                    return Forbid();
+                }
+
+                if (!string.Equals(response.VehiclePlaca, driver.AssignedVehiclePlaca, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Forbid();
+                }
+            }
+
             return Ok(response);
         }
         catch (Exception ex)
