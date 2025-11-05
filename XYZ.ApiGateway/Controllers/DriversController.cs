@@ -6,7 +6,7 @@ namespace XYZ.ApiGateway.Controllers;
 //documentation for DriversController
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class DriversController : ControllerBase
 {
     private readonly DriversGatewayService _driversService;

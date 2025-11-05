@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+option csharp_namespace = "XYZ.VehiclesService.Protos";
+
+service Vehicles {
+  rpc CreateVehicle (CreateVehicleRequest) returns (VehicleResponse);
+  rpc GetVehicleByPlaca (GetVehicleByPlacaRequest) returns (VehicleResponse);
+  rpc SetAssignedDriver (SetAssignedDriverRequest) returns (VehicleResponse);
+  rpc GetVehicleById (GetVehicleRequest) returns (VehicleResponse);
+  rpc GetAllVehicles (EmptyRequest) returns (VehiclesListResponse);
+  rpc GetVehicleTypes (EmptyRequest) returns (VehicleTypesListResponse);
+}
+
+message CreateVehicleRequest {
+  string placa = 1;
+  string chasis = 2;
+  string marca = 3;
+  string modelo = 4;
+  int32 anio = 5;
+  int32 vehicleTypeId = 6;
+  string estado = 7;
+  double km = 8;
+  string assigned_driver_document = 9;
+}
+
+message GetVehicleRequest {
+  int32 id = 1;
+}
+
+message GetVehicleByPlacaRequest {
+  string placa = 1;
+}
+
+message SetAssignedDriverRequest {
+  string placa = 1;
+  string driver_document = 2;
+}
+
+message EmptyRequest {}
+
+message VehicleResponse {
+  int32 id = 1;
+  string placa = 2;
+  string chasis = 3;
+  string marca = 4;
+  string modelo = 5;
+  int32 anio = 6;
+  string tipoMaquinaria = 7;
+  string tipoMotor = 8;
+  double consumoBase = 9;
+  string estado = 10;
+  double km = 11;
+  string assigned_driver_document = 12;
+}
+
+message VehiclesListResponse {
+  repeated VehicleResponse vehicles = 1;
+}
+
+message VehicleTypeResponse {
+  int32 id = 1;
+  string tipoMaquinaria = 2;
+  string subtipo = 3;
+  string tipoMotor = 4;
+  double consumoBase = 5;
+  double factorMotor = 6;
+  double pavimentado = 7;
+  double montanoso = 8;
+  double mixto = 9;
+}
+
+message VehicleTypesListResponse {
+  repeated VehicleTypeResponse types = 1;
+}

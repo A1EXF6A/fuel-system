@@ -40,6 +40,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Dependency Injection for Gateway Services
 builder.Services.AddScoped<AuthGatewayService>();
 builder.Services.AddScoped<DriversGatewayService>();
+builder.Services.AddScoped<VehiclesGatewayService>();
+builder.Services.AddScoped<RoutesGatewayService>();
+builder.Services.AddScoped<FuelGatewayService>();
 
 var app = builder.Build();
 
