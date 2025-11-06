@@ -1,0 +1,203 @@
+DRIVERS - Gateway endpoints (HTTP) and example JSON bodies
+
+Base URL (gateway): http://localhost:5010/api
+
+1) Create Driver
+- Method: POST
+- URL: /api/drivers
+- Description: Crea un nuevo conductor. Requiere rol Admin (Authorization: Bearer <token>)
+- Example JSON body (CreateDriverDto):
+{
+  "FirstName": "Juan",
+  "LastName": "Perez",
+  "DocumentNumber": "12345678",
+  "PhoneNumber": "+593987654321",
+  "Email": "juan.perez@example.com",
+  "LicenseNumber": "ABC-12345",
+  "LicenseCategory": 2,
+  "LicenseExpiryDate": "2027-12-31T00:00:00",
+  "DriverType": 0,
+  "HireDate": "2024-01-01T00:00:00"
+}
+
+Response: normalmente devuelve el driver creado (id y campos) o un objeto { success: true, driver: { ... } }
+
+-----
+
+2) Update Driver
+- Method: PUT
+- URL: /api/drivers/{id}
+- Description: Actualiza los datos de un conductor por su id. Requiere rol Admin.
+- Example JSON body (UpdateDriverDto). El campo `id` se pasa en la ruta, no en el body:
+{
+  "FirstName": "Juan Carlos",
+  "LastName": "Perez",
+  "PhoneNumber": "+593987654321",
+  "Email": "juan.carlos@example.com",
+  "LicenseNumber": "ABC-12345",
+  "LicenseCategory": 2,
+  "LicenseExpiryDate": "2028-06-30T00:00:00",
+  "DriverType": 1,
+}
+Response: normalmente devuelve { success: true, driver: { ... } } o el driver actualizado.
+
+-----
+
+- Example JSON body (sent as request body, as gateway expects metadata about who deletes):
+{
+  "DeletedBy": "admin@example.com",
+  "Reason": "No longer with company"
+}
+
+Response: { success: true }
+
+-----
+  4) Hard Delete Driver (permanent)
+  - Method: DELETE
+
+  Response: { success: true }
+
+  -----
+
+ROUTES - Gateway endpoints (only create and update)
+
+1) Create Route
+- Method: POST
+- URL: /api/routes
+- Description: Crea una nueva ruta. Requiere rol Admin (o Supervisor según policy).
+- Example JSON body (CreateRouteDto) — note property names follow the gateway's expected casing (often PascalCase / spanish names used in this repo):
+{
+  "Nombre": "Quito - Guayaquil",
+  "Origen": "Quito, Ecuador",
+  "Destino": "Guayaquil, Ecuador",
+  "VehiclePlaca": "ABC-123",
+  "DriverId": 5,
+  "PlannedDeparture": "2025-11-10T08:00:00",
+  "PlannedArrival": "2025-11-10T18:00:00"
+}
+
+Response: normalmente devuelve la ruta creada (id y datos) o { success: true, route: { ... } }
+
+-----
+
+2) Update Route
+- Method: PUT
+- URL: /api/routes/{id}
+- Description: Actualiza una ruta por su id. Requiere rol Admin (o Supervisor según policy).
+- Example JSON body (UpdateRouteDto). Id se pasa en la ruta; body contiene campos a actualizar:
+{
+  "Nombre": "Quito - Guayaquil (via Latacunga)",
+  "Origen": "Quito, Ecuador",
+  "Destino": "Guayaquil, Ecuador",
+  "VehiclePlaca": "ABC-123",
+  "DriverId": 5,
+  "PlannedDeparture": "2025-11-10T09:00:00",
+  "PlannedArrival": "2025-11-10T19:00:00",
+  "Status": 1
+}
+
+Response: normalmente devuelve el route actualizado o { success: true }
+
+-----
+
+Notes / tips
+- Always include Authorization header: "Authorization: Bearer <JWT>" for protected endpoints.
+- Date/time fields: use ISO-8601 (e.g. "2025-11-10T08:00:00").
+- Field names: the gateway in this repo often expects PascalCase (or Spanish property names like Nombre/Origen/Destino). If you get validation errors, adjust casing accordingly.
+- If the gateway returns validation errors, inspect the response body (application/problem+json) — it contains the list of errors.
+
+If quieres, ejecuto llamadas de ejemplo (POST/PUT/DELETE) usando estos payloads contra tu gateway y te pego las respuestas. ¿Lo ejecuto ahora?
+
+-----
+
+FUEL REPORTS - Gateway endpoints and example JSON bodies
+
+Base URL (gateway): http://localhost:5010/api
+
+1) Create Fuel Plan (estimated)
+- Method: POST
+- URL: /api/fuel/plan  (some gateways use /api/fuel/report or /api/fuel/plan; adjust if your gateway differs)
+- Description: Crea un plan/estimado de combustible para una ruta/vehículo.
+- Example JSON body (CreateFuelPlanDto):
+{
+  "VehiclePlaca": "ABC-123",
+  "RouteId": 10,
+  "EstimatedLiters": 120.5,
+  "PlannedDate": "2025-11-10T08:00:00",
+  "Notes": "Plan estimado para transporte"
+}
+
+Response: normalmente devuelve el plan creado con su id y campos adicionales.
+
+-----
+
+2) Register Actual Consumption
+- Method: POST
+- URL: /api/fuel/register  (alternatively /api/fuel/report/consume)
+- Description: Registra el consumo real ocurrido (lectura posterior a la ruta).
+- Example JSON body (RegisterActualConsumptionDto):
+{
+  "FuelReportId": 5,
+  "VehiclePlaca": "ABC-123",
+  "ActualLiters": 130.2,
+  "OdometerKm": 1500.5,
+  "RecordedAt": "2025-11-10T19:00:00",
+  "Notes": "Consumo real tras finalizar ruta"
+}
+
+Response: normalmente devuelve { success: true, report: { ... } } o la entrada registrada.
+
+-----
+
+3) Get Reports (filter)
+- Method: POST
+- URL: /api/fuel/report  (o GET /api/fuel/reports with query params)
+- Description: Solicita reportes filtrados por vehículo o ruta.
+- Example JSON body (ReportFilterDto):
+{
+  "FilterType": "vehicle",   // "vehicle" or "route"
+  "FilterValue": "ABC-123",  // placa or route id
+  "FromDate": "2025-11-01T00:00:00",
+  "ToDate": "2025-11-30T23:59:59"
+}
+
+Response: lista de reportes que coinciden con el filtro.
+
+-----
+
+4) Get All Reports
+- Method: GET
+- URL: /api/fuel/reports
+- Description: Obtiene todos los reportes (Admin/Supervisor).
+
+Response: { FuelRecords: [ ... ] } or similar.
+
+-----
+
+5) Update Report Status
+- Method: POST
+- URL: /api/fuel/reports/{id}/status
+- Description: Cambia el estado de un reporte (aprobado, rechazado, pendiente, etc.). Requiere rol apropiado.
+- Example JSON body (UpdateReportStatusDto):
+{
+  "Status": 2,       // por ejemplo 0=pending,1=approved,2=rejected
+  "UpdatedBy": "supervisor@example.com",
+  "Notes": "Revisado y rechazado por inconsistencia"
+}
+
+Response: { success: true }
+
+-----
+
+6) Delete Report (optional)
+- Method: DELETE
+- URL: /api/fuel/report/{id}
+- Description: Elimina un reporte (soft or permanent depending on gateway implementation).
+
+Response: { success: true }
+
+Notes
+- Asegúrate de usar el header Authorization: Bearer <JWT> para llamadas protegidas.
+- Ajusta los nombres de endpoints si tu gateway usa /plan vs /report; el archivo muestra opciones comunes usadas en este repo.
+
+Si quieres que ejecute alguna de estas llamadas (por ejemplo crear un plan de combustible para la placa NEW-001), dime el endpoint exacto a usar o autorizame a usar los estándares que incluí y lo ejecuto con el token admin.

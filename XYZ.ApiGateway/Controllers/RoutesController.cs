@@ -173,14 +173,39 @@ public class RoutesController : ControllerBase
         try
         {
             var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) && !string.Equals(role, "Supervisor", StringComparison.OrdinalIgnoreCase))
+
+            // Admins and Supervisors can update any route status
+            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(role, "Supervisor", StringComparison.OrdinalIgnoreCase))
             {
-                return Forbid();
+                var grpcReq = new UpdateRouteStatusRequest { Id = id, Estado = request.Estado };
+                var response = await _routesService.UpdateRouteStatusAsync(grpcReq);
+                return Ok(response);
             }
 
-            var grpcReq = new UpdateRouteStatusRequest { Id = id, Estado = request.Estado };
-            var response = await _routesService.UpdateRouteStatusAsync(grpcReq);
-            return Ok(response);
+            // Operators can update the status only for routes of their assigned vehicle
+            if (string.Equals(role, "Operador", StringComparison.OrdinalIgnoreCase))
+            {
+                var username = User.Identity?.Name ?? string.Empty;
+                var driversResp = await _driversService.GetAllDriversAsync();
+                var driver = driversResp.Drivers.FirstOrDefault(d => d.DocumentNumber == username);
+                if (driver == null || string.IsNullOrEmpty(driver.AssignedVehiclePlaca))
+                {
+                    return Forbid();
+                }
+
+                var routeResp = await _routesService.GetRouteByIdAsync(id);
+                if (routeResp == null || !string.Equals(routeResp.VehiclePlaca, driver.AssignedVehiclePlaca, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Forbid();
+                }
+
+                var grpcReq = new UpdateRouteStatusRequest { Id = id, Estado = request.Estado };
+                var response = await _routesService.UpdateRouteStatusAsync(grpcReq);
+                return Ok(response);
+            }
+
+            return Forbid();
         }
         catch (Exception ex)
         {

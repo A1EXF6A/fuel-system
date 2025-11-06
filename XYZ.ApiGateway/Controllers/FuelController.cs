@@ -44,13 +44,42 @@ public class FuelController : ControllerBase
         try
         {
             var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+
+            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
             {
-                return Forbid();
+                var response = await _fuelService.RegisterActualConsumptionAsync(dto.PlanId, dto.ActualLiters);
+                return Ok(response);
             }
 
-            var response = await _fuelService.RegisterActualConsumptionAsync(dto.PlanId, dto.ActualLiters);
-            return Ok(response);
+            // Operators can register actual consumption only for plans of their assigned vehicle
+            if (string.Equals(role, "Operador", StringComparison.OrdinalIgnoreCase))
+            {
+                var username = User.Identity?.Name ?? string.Empty;
+                var driversResp = await _driversService.GetAllDriversAsync();
+                var driver = driversResp.Drivers.FirstOrDefault(d => d.DocumentNumber == username);
+                if (driver == null || string.IsNullOrEmpty(driver.AssignedVehiclePlaca))
+                {
+                    return Forbid();
+                }
+
+                // Find the plan by id from all reports (no direct GetPlanById RPC available)
+                var reports = await _fuelService.GetAllFuelReportsAsync();
+                var plan = reports.Registros.FirstOrDefault(r => r.Id == dto.PlanId);
+                if (plan == null)
+                {
+                    return NotFound(new { message = "Fuel plan not found" });
+                }
+
+                if (!string.Equals(plan.VehiclePlaca, driver.AssignedVehiclePlaca, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Forbid();
+                }
+
+                var response = await _fuelService.RegisterActualConsumptionAsync(dto.PlanId, dto.ActualLiters);
+                return Ok(response);
+            }
+
+            return Forbid();
         }
         catch (Exception ex)
         {
@@ -104,8 +133,31 @@ public class FuelController : ControllerBase
     {
         try
         {
-            var response = await _fuelService.GetAllFuelReportsAsync();
-            return Ok(response);
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(role, "Supervisor", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = await _fuelService.GetAllFuelReportsAsync();
+                return Ok(response);
+            }
+
+            if (string.Equals(role, "Operador", StringComparison.OrdinalIgnoreCase))
+            {
+                var username = User.Identity?.Name ?? string.Empty;
+                var driversResp = await _driversService.GetAllDriversAsync();
+                var driver = driversResp.Drivers.FirstOrDefault(d => d.DocumentNumber == username);
+                if (driver == null || string.IsNullOrEmpty(driver.AssignedVehiclePlaca))
+                {
+                    return Ok(new { Registros = new object[0] });
+                }
+
+                // Use GetFuelReport with filterType = "vehicle" to retrieve only reports for the assigned vehicle
+                var response = await _fuelService.GetFuelReportAsync("vehicle", driver.AssignedVehiclePlaca);
+                return Ok(response);
+            }
+
+            return Forbid();
         }
         catch (Exception ex)
         {
@@ -119,13 +171,44 @@ public class FuelController : ControllerBase
         try
         {
             var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) && !string.Equals(role, "Supervisor", StringComparison.OrdinalIgnoreCase))
+
+            // Admins and Supervisors can update any report status
+            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(role, "Supervisor", StringComparison.OrdinalIgnoreCase))
             {
-                return Forbid();
+                var response = await _fuelService.UpdateReportStatusAsync(id, request.Estado);
+                return Ok(response);
             }
 
-            var response = await _fuelService.UpdateReportStatusAsync(id, request.Estado);
-            return Ok(response);
+            // Operators can update report status only for reports of their assigned vehicle
+            if (string.Equals(role, "Operador", StringComparison.OrdinalIgnoreCase))
+            {
+                var username = User.Identity?.Name ?? string.Empty;
+                var driversResp = await _driversService.GetAllDriversAsync();
+                var driver = driversResp.Drivers.FirstOrDefault(d => d.DocumentNumber == username);
+                if (driver == null || string.IsNullOrEmpty(driver.AssignedVehiclePlaca))
+                {
+                    return Forbid();
+                }
+
+                // Retrieve all reports and find the one with the requested id
+                var reports = await _fuelService.GetAllFuelReportsAsync();
+                var report = reports.Registros.FirstOrDefault(r => r.Id == id);
+                if (report == null)
+                {
+                    return NotFound(new { message = "Fuel report not found" });
+                }
+
+                if (!string.Equals(report.VehiclePlaca, driver.AssignedVehiclePlaca, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Forbid();
+                }
+
+                var response = await _fuelService.UpdateReportStatusAsync(id, request.Estado);
+                return Ok(response);
+            }
+
+            return Forbid();
         }
         catch (Exception ex)
         {
