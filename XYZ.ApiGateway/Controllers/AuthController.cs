@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using XYZ.ApiGateway.Services;
 
 namespace XYZ.ApiGateway.Controllers;
