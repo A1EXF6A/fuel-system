@@ -199,11 +199,11 @@ const Vehicles = () => {
 
 
 
-  const menuItems = user.role === 'Operador' ? [
-    { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
-    { text: 'Ruta', icon: <Route />, path: '/routes' },
-    { text: 'Consumo Combustible', icon: <Assessment />, path: '/reports' }
-  ] : [
+   const menuItems = user.role === 'Operador' ? [
+     { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
+     { text: 'Ruta', icon: <Route />, path: '/routes' },
+     { text: 'Reporte', icon: <Assessment />, path: '/reports' }
+   ] : [
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },

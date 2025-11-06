@@ -79,9 +79,10 @@ const RoutesComponent = () => {
   const [statusForm, setStatusForm] = useState({
     estado: ''
   });
-  const [openFuelDialog, setOpenFuelDialog] = useState(false);
-  const [fuelPlan, setFuelPlan] = useState(null);
-  const [actualLiters, setActualLiters] = useState('');
+   const [openFuelDialog, setOpenFuelDialog] = useState(false);
+   const [fuelPlan, setFuelPlan] = useState(null);
+   const [actualLiters, setActualLiters] = useState('');
+   const [assignedPlaca, setAssignedPlaca] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -132,30 +133,33 @@ const RoutesComponent = () => {
     }
   };
   const fetchDriverAndRoute = async () => {
-    try {
-      // Fetch driver by username
-      const driverResponse = await axios.get('http://localhost:5010/api/drivers');
-      let drivers = [];
-      if (Array.isArray(driverResponse.data)) {
-        drivers = driverResponse.data;
-      } else if (driverResponse.data.Drivers) {
-        drivers = driverResponse.data.Drivers;
-      }
-      const driver = drivers.find(d => d.documentNumber === user.username);
-      if (driver && driver.assignedVehiclePlaca) {
-        // Fetch routes and find the one assigned to the vehicle
-        const routeResponse = await axios.get('http://localhost:5010/api/routes');
-        const allRoutes = routeResponse.data.routes || routeResponse.data.Routes || [];
-        const assignedRoute = allRoutes.find(r => r.vehiclePlaca === driver.assignedVehiclePlaca);
-        setRoutes(assignedRoute ? [assignedRoute] : []);
-      } else {
-        setRoutes([]);
-      }
-    } catch (error) {
-      console.error('Error fetching driver and route:', error);
-      setRoutes([]);
-    }
-  };
+     try {
+       // Fetch driver by username
+       const driverResponse = await axios.get('http://localhost:5010/api/drivers');
+       let drivers = [];
+       if (Array.isArray(driverResponse.data)) {
+         drivers = driverResponse.data;
+       } else if (driverResponse.data.Drivers) {
+         drivers = driverResponse.data.Drivers;
+       }
+       const driver = drivers.find(d => d.documentNumber === user.username);
+       if (driver && driver.assignedVehiclePlaca) {
+         setAssignedPlaca(driver.assignedVehiclePlaca);
+         // Fetch routes and find the one assigned to the vehicle
+         const routeResponse = await axios.get('http://localhost:5010/api/routes');
+         const allRoutes = routeResponse.data.routes || routeResponse.data.Routes || [];
+         const assignedRoute = allRoutes.find(r => r.vehiclePlaca === driver.assignedVehiclePlaca);
+         setRoutes(assignedRoute ? [assignedRoute] : []);
+       } else {
+         setAssignedPlaca('');
+         setRoutes([]);
+       }
+     } catch (error) {
+       console.error('Error fetching driver and route:', error);
+       setAssignedPlaca('');
+       setRoutes([]);
+     }
+   };
 
 
   const handleAssign = (driver) => {
@@ -236,14 +240,18 @@ const RoutesComponent = () => {
   };
 
   const handleSubmitStatus = async () => {
-    try {
-      await axios.post(`http://localhost:5010/api/routes/${editingRoute.id}/status`, { Estado: statusForm.estado });
-      setOpenUpdateStatusDialog(false);
-      fetchRoutes();
-    } catch (error) {
-      console.error('Error updating status:', error);
-    }
-  };
+     try {
+       await axios.post(`http://localhost:5010/api/routes/${editingRoute.id}/status`, { Estado: statusForm.estado });
+       setOpenUpdateStatusDialog(false);
+       if (user.role === 'Operador') {
+         fetchDriverAndRoute();
+       } else {
+         fetchRoutes();
+       }
+     } catch (error) {
+       console.error('Error updating status:', error);
+     }
+   };
 
   const handleAddFuel = async (route) => {
     try {
@@ -280,11 +288,11 @@ const RoutesComponent = () => {
 
 
 
-  const menuItems = user.role === 'Operador' ? [
-    { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
-    { text: 'Ruta', icon: <Route />, path: '/routes' },
-    { text: 'Consumo Combustible', icon: <Assessment />, path: '/reports' }
-  ] : [
+   const menuItems = user.role === 'Operador' ? [
+     { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
+     { text: 'Ruta', icon: <Route />, path: '/routes' },
+     { text: 'Reporte', icon: <Assessment />, path: '/reports' }
+   ] : [
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
@@ -392,12 +400,13 @@ const RoutesComponent = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {routes.filter(route =>
-                        (!nombreFilter || route.nombre.toLowerCase().includes(nombreFilter.toLowerCase())) &&
-                        (!origenFilter || route.origen.toLowerCase().includes(origenFilter.toLowerCase())) &&
-                        (!destinoFilter || route.destino.toLowerCase().includes(destinoFilter.toLowerCase())) &&
-                        (!estadoFilter || route.estado.toLowerCase().includes(estadoFilter.toLowerCase()))
-                      ).map((route) => (
+                   {routes.filter(route =>
+                     (!nombreFilter || route.nombre.toLowerCase().includes(nombreFilter.toLowerCase())) &&
+                     (!origenFilter || route.origen.toLowerCase().includes(origenFilter.toLowerCase())) &&
+                     (!destinoFilter || route.destino.toLowerCase().includes(destinoFilter.toLowerCase())) &&
+                     (!estadoFilter || route.estado.toLowerCase().includes(estadoFilter.toLowerCase())) &&
+                     (user.role !== 'Operador' || route.vehiclePlaca === assignedPlaca)
+                   ).map((route) => (
                         <TableRow key={route.id}>
                           <TableCell>{route.id}</TableCell>
                           <TableCell>{route.nombre}</TableCell>
@@ -535,7 +544,7 @@ const RoutesComponent = () => {
                     <TableCell>Origen</TableCell>
                     <TableCell>Destino</TableCell>
                     <TableCell>Estado</TableCell>
-                    {user.role === 'Admin' && <TableCell>Acciones</TableCell>}
+                     {(user.role === 'Admin' || user.role === 'Operador') && <TableCell>Acciones</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -551,19 +560,23 @@ const RoutesComponent = () => {
                       <TableCell>{route.origen}</TableCell>
                       <TableCell>{route.destino}</TableCell>
                       <TableCell>{route.estado}</TableCell>
-                      {user.role === 'Admin' && (
-                        <TableCell>
-                          <IconButton onClick={() => handleEditRoute(route)}>
-                            <Edit />
-                          </IconButton>
-                          <IconButton onClick={() => handleUpdateStatus(route)}>
-                            <Update />
-                          </IconButton>
-                          <IconButton onClick={() => handleAddFuel(route)}>
-                            <LocalGasStation />
-                          </IconButton>
-                        </TableCell>
-                      )}
+                       {(user.role === 'Admin' || user.role === 'Operador') && (
+                         <TableCell>
+                           {user.role === 'Admin' && (
+                             <>
+                               <IconButton onClick={() => handleEditRoute(route)}>
+                                 <Edit />
+                               </IconButton>
+                               <IconButton onClick={() => handleAddFuel(route)}>
+                                 <LocalGasStation />
+                               </IconButton>
+                             </>
+                           )}
+                           <IconButton onClick={() => handleUpdateStatus(route)}>
+                             <Update />
+                           </IconButton>
+                         </TableCell>
+                       )}
                     </TableRow>
                   ))}
                 </TableBody>

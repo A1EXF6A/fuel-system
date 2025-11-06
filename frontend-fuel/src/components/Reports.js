@@ -149,15 +149,7 @@ const Reports = () => {
     }
   };
 
-   useEffect(() => {
-     if (!loading && !user) {
-       navigate('/login');
-     } else if (user && user.role === 'Operador') {
-       return;
-     } else if (user && (user.role === 'Admin' || user.role === 'Supervisor')) {
-       fetchReports();
-     }
-   }, [user, loading, navigate]);
+
 
    if (loading) return <div>Loading...</div>;
 
@@ -165,11 +157,11 @@ const Reports = () => {
 
 
 
-  const menuItems = user.role === 'Operador' ? [
-    { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
-    { text: 'Ruta', icon: <Route />, path: '/routes' },
-    { text: 'Consumo Combustible', icon: <Assessment />, path: '/reports' }
-  ] : [
+   const menuItems = user.role === 'Operador' ? [
+     { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
+     { text: 'Ruta', icon: <Route />, path: '/routes' },
+     { text: 'Reporte', icon: <Assessment />, path: '/reports' }
+   ] : [
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
@@ -181,9 +173,9 @@ const Reports = () => {
     <Box sx={{ display: 'flex' }}>
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Fuel System - {user.role === 'Operador' ? 'Consumo de Combustible' : 'Reportes'}
-          </Typography>
+           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+             Fuel System - {user.role === 'Operador' ? 'Reportes' : 'Reportes'}
+           </Typography>
           <IconButton color="inherit" onClick={logout}>
             <Logout />
           </IconButton>
@@ -287,9 +279,9 @@ const Reports = () => {
           </>
         ) : (
           <>
-            <Typography variant="h4" gutterBottom>
-              {user.role === 'Operador' ? 'Consumo de Combustible' : 'Reportes de Combustible'}
-            </Typography>
+             <Typography variant="h4" gutterBottom>
+               {user.role === 'Operador' ? 'Reportes' : 'Reportes de Combustible'}
+             </Typography>
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -315,10 +307,11 @@ const Reports = () => {
                     <TableCell>ID</TableCell>
                     <TableCell>Vehículo</TableCell>
                     <TableCell>Nombre de la Ruta</TableCell>
-                    <TableCell>Estimado (L)</TableCell>
-                    <TableCell>Actual (L)</TableCell>
-                    <TableCell>Estado</TableCell>
-                  </TableRow>
+                     <TableCell>Estimado (L)</TableCell>
+                     <TableCell>Actual (L)</TableCell>
+                     <TableCell>Estado</TableCell>
+                     <TableCell>Acciones</TableCell>
+                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {reports.filter(report =>
@@ -330,10 +323,18 @@ const Reports = () => {
                       <TableCell>{report.id}</TableCell>
                       <TableCell>{report.vehiclePlaca}</TableCell>
                       <TableCell>{report.routeName}</TableCell>
-                      <TableCell>{Math.round(report.estimatedLiters)}</TableCell>
-                      <TableCell>{report.actualLiters}</TableCell>
-                      <TableCell>{report.estado}</TableCell>
-                    </TableRow>
+                       <TableCell>{Math.round(report.estimatedLiters)}</TableCell>
+                       <TableCell>{report.actualLiters}</TableCell>
+                       <TableCell>{report.estado}</TableCell>
+                       <TableCell>
+                         <IconButton onClick={() => handleUpdateLiters(report)}>
+                           <Edit />
+                         </IconButton>
+                         <IconButton onClick={() => handleUpdateStatus(report)}>
+                           <CheckCircle />
+                         </IconButton>
+                       </TableCell>
+                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
