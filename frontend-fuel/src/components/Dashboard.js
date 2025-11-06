@@ -34,16 +34,15 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ drivers: 0, vehicles: 0, users: 0, routes: 0 });
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login');
-    } else if (user && user.role !== 'Admin') {
-      // For now, show placeholder for non-admin
-      return;
-    } else if (user && user.role === 'Admin') {
-      fetchStats();
-    }
-  }, [user, loading, navigate]);
+   useEffect(() => {
+     if (!loading && !user) {
+       navigate('/login');
+     } else if (user && user.role === 'Operador') {
+       return;
+     } else if (user && (user.role === 'Admin' || user.role === 'Supervisor')) {
+       fetchStats();
+     }
+   }, [user, loading, navigate]);
 
   const fetchStats = async () => {
     try {
@@ -68,13 +67,13 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  if (user.role !== 'Admin') {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography variant="h4">Se está implementando</Typography>
-      </Box>
-    );
-  }
+   if (user.role === 'Operador') {
+     return (
+       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+         <Typography variant="h4">Se está implementando</Typography>
+       </Box>
+     );
+   }
 
   const menuItems = [
     { text: 'Usuarios', icon: <People />, path: '/users' },

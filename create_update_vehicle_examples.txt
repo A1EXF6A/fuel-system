@@ -1,0 +1,55 @@
+VEHICLES - Gateway endpoints y ejemplos de cuerpo JSON
+
+Base URL (gateway): http://localhost:5010/api
+
+1) Crear vehículo
+- Método: POST
+- URL: /api/vehicles
+- Descripción: Crea un nuevo vehículo. Requiere autenticación y normalmente rol Admin (Authorization: Bearer <JWT>).
+- Ejemplo JSON body (CreateVehicleDto):
+{
+  "Placa": "ABC-123",
+  "Marca": "Toyota",
+  "Modelo": "Hilux",
+  "Anio": 2020,
+  "Color": "Blanco",
+  "TipoMaquinaria": "Liviana",
+  "TipoMotor": "Diesel",
+  "ConsumoBase": 10.5,
+  "CapacidadTanque": 80.0,
+  "Observaciones": "Vehículo de reparto"
+}
+
+Respuesta esperada: normalmente devuelve el vehículo creado o un objeto con success + vehicle: { id, placa, ... }.
+
+-----
+
+2) Actualizar vehículo
+- Método: PUT
+- URL: /api/vehicles/{id}
+- Descripción: Actualiza los datos de un vehículo. El {id} es el identificador numérico del vehículo. Requiere autenticación y suele exigir rol Admin.
+- Ejemplo JSON body (UpdateVehicleDto):
+{
+  "Marca": "Toyota",
+  "Modelo": "Hilux SR",
+  "Anio": 2021,
+  "Color": "Blanco",
+  "TipoMaquinaria": "Liviana",
+  "TipoMotor": "Diesel",
+  "ConsumoBase": 9.8,
+  "CapacidadTanque": 90.0,
+  "Observaciones": "Actualizado a versión SR"
+}
+
+Ejemplo de uso (PowerShell, con token obtenido previamente):
+Invoke-RestMethod -Method Put -Uri "http://localhost:5010/api/vehicles/3" -Headers @{ Authorization = "Bearer <token>" } -Body '<JSON_BODY>' -ContentType 'application/json'
+
+Notas importantes:
+- Algunos endpoints de lectura del gateway usan la placa en la ruta (por ejemplo GET /api/vehicles/{placa}) mientras que la actualización utiliza el id numérico en la ruta. Si solo conoces la placa, primero llama a GET /api/vehicles para localizar el id.
+- Siempre incluye el header Authorization: Bearer <JWT> para llamadas protegidas.
+- Los nombres de campos y el casing pueden variar; el gateway suele esperar PascalCase. Si recibes errores de validación, revisa el cuerpo y ajusta el casing.
+- Campos opcionales: Observaciones y otros pueden omitirse según la implementación del servicio.
+
+-----
+
+Si quieres, puedo añadir ejemplos adicionales (curl, fetch, o un script PowerShell completo) o ejecutar una llamada de ejemplo contra tu gateway y pegar la respuesta.

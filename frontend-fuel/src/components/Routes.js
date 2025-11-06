@@ -86,19 +86,21 @@ const RoutesComponent = () => {
   useEffect(() => {
     if (!loading && !user) {
       navigate('/login');
-    } else if (user && user.role !== 'Admin') {
-      return;
     } else if (user && user.role === 'Admin') {
       fetchRoutes();
       fetchDrivers();
       fetchVehicles();
+    } else if (user && user.role === 'Operador') {
+      fetchDriverAndRoute();
+    } else if (user && user.role === 'Supervisor') {
+      fetchRoutes();
     }
   }, [user, loading, navigate]);
 
   const fetchRoutes = async () => {
     try {
       const response = await axios.get('http://localhost:5010/api/routes');
-      setRoutes(response.data.routes || []);
+      setRoutes(response.data.routes || response.data.Routes || []);
     } catch (error) {
       console.error('Error fetching routes:', error);
     }
@@ -129,6 +131,32 @@ const RoutesComponent = () => {
       console.error('Error fetching vehicles:', error);
     }
   };
+  const fetchDriverAndRoute = async () => {
+    try {
+      // Fetch driver by username
+      const driverResponse = await axios.get('http://localhost:5010/api/drivers');
+      let drivers = [];
+      if (Array.isArray(driverResponse.data)) {
+        drivers = driverResponse.data;
+      } else if (driverResponse.data.Drivers) {
+        drivers = driverResponse.data.Drivers;
+      }
+      const driver = drivers.find(d => d.documentNumber === user.username);
+      if (driver && driver.assignedVehiclePlaca) {
+        // Fetch routes and find the one assigned to the vehicle
+        const routeResponse = await axios.get('http://localhost:5010/api/routes');
+        const allRoutes = routeResponse.data.routes || routeResponse.data.Routes || [];
+        const assignedRoute = allRoutes.find(r => r.vehiclePlaca === driver.assignedVehiclePlaca);
+        setRoutes(assignedRoute ? [assignedRoute] : []);
+      } else {
+        setRoutes([]);
+      }
+    } catch (error) {
+      console.error('Error fetching driver and route:', error);
+      setRoutes([]);
+    }
+  };
+
 
   const handleAssign = (driver) => {
     setSelectedDriver(driver);
@@ -250,15 +278,13 @@ const RoutesComponent = () => {
 
   if (!user) return null;
 
-  if (user.role !== 'Admin') {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography variant="h4">Se está implementando</Typography>
-      </Box>
-    );
-  }
 
-  const menuItems = [
+
+  const menuItems = user.role === 'Operador' ? [
+    { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
+    { text: 'Ruta', icon: <Route />, path: '/routes' },
+    { text: 'Consumo Combustible', icon: <Assessment />, path: '/reports' }
+  ] : [
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
@@ -271,7 +297,7 @@ const RoutesComponent = () => {
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Fuel System - Rutas
+            Fuel System - {user.role === 'Operador' ? 'Mi Ruta' : 'Rutas'}
           </Typography>
           <IconButton color="inherit" onClick={logout}>
             <Logout />
@@ -304,155 +330,240 @@ const RoutesComponent = () => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 2 }}>
-          <Tab label="Asignar" value="asignar" />
-          <Tab label="Desasignar" value="desasignar" />
-          <Tab label="Rutas" value="rutas" />
-        </Tabs>
-        {activeTab === 'rutas' && (
+        {user.role === 'Admin' ? (
           <>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-              <Typography variant="h4">Rutas</Typography>
-              <Button variant="contained" startIcon={<Add />} onClick={handleCreateRoute}>
-                Nueva Ruta
-              </Button>
-            </Box>
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12} sm={3}>
-            <TextField
-              fullWidth
-              label="Filtrar por Nombre"
-              value={nombreFilter}
-              onChange={(e) => setNombreFilter(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <TextField
-              fullWidth
-              label="Filtrar por Origen"
-              value={origenFilter}
-              onChange={(e) => setOrigenFilter(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <TextField
-              fullWidth
-              label="Filtrar por Destino"
-              value={destinoFilter}
-              onChange={(e) => setDestinoFilter(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <TextField
-              fullWidth
-              label="Filtrar por Estado"
-              value={estadoFilter}
-              onChange={(e) => setEstadoFilter(e.target.value)}
-            />
-          </Grid>
-        </Grid>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Nombre</TableCell>
-                <TableCell>Origen</TableCell>
-                <TableCell>Destino</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {routes.filter(route =>
-                (!nombreFilter || route.nombre.toLowerCase().includes(nombreFilter.toLowerCase())) &&
-                (!origenFilter || route.origen.toLowerCase().includes(origenFilter.toLowerCase())) &&
-                (!destinoFilter || route.destino.toLowerCase().includes(destinoFilter.toLowerCase())) &&
-                (!estadoFilter || route.estado.toLowerCase().includes(estadoFilter.toLowerCase()))
-              ).map((route) => (
-                <TableRow key={route.id}>
-                  <TableCell>{route.id}</TableCell>
-                  <TableCell>{route.nombre}</TableCell>
-                  <TableCell>{route.origen}</TableCell>
-                  <TableCell>{route.destino}</TableCell>
-                  <TableCell>{route.estado}</TableCell>
-                    <TableCell>
-                      <IconButton onClick={() => handleEditRoute(route)}>
-                        <Edit />
-                      </IconButton>
-                      <IconButton onClick={() => handleUpdateStatus(route)}>
-                        <Update />
-                      </IconButton>
-                      <IconButton onClick={() => handleAddFuel(route)}>
-                        <LocalGasStation />
-                      </IconButton>
-                    </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 2 }}>
+              <Tab label="Asignar" value="asignar" />
+              <Tab label="Desasignar" value="desasignar" />
+              <Tab label="Rutas" value="rutas" />
+            </Tabs>
+            {activeTab === 'rutas' && (
+              <>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography variant="h4">Rutas</Typography>
+                  <Button variant="contained" startIcon={<Add />} onClick={handleCreateRoute}>
+                    Nueva Ruta
+                  </Button>
+                </Box>
+                <Grid container spacing={2} sx={{ mb: 2 }}>
+                  <Grid item xs={12} sm={3}>
+                    <TextField
+                      fullWidth
+                      label="Filtrar por Nombre"
+                      value={nombreFilter}
+                      onChange={(e) => setNombreFilter(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField
+                      fullWidth
+                      label="Filtrar por Origen"
+                      value={origenFilter}
+                      onChange={(e) => setOrigenFilter(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField
+                      fullWidth
+                      label="Filtrar por Destino"
+                      value={destinoFilter}
+                      onChange={(e) => setDestinoFilter(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField
+                      fullWidth
+                      label="Filtrar por Estado"
+                      value={estadoFilter}
+                      onChange={(e) => setEstadoFilter(e.target.value)}
+                    />
+                  </Grid>
+                </Grid>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Nombre</TableCell>
+                        <TableCell>Origen</TableCell>
+                        <TableCell>Destino</TableCell>
+                        <TableCell>Estado</TableCell>
+                        <TableCell>Acciones</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {routes.filter(route =>
+                        (!nombreFilter || route.nombre.toLowerCase().includes(nombreFilter.toLowerCase())) &&
+                        (!origenFilter || route.origen.toLowerCase().includes(origenFilter.toLowerCase())) &&
+                        (!destinoFilter || route.destino.toLowerCase().includes(destinoFilter.toLowerCase())) &&
+                        (!estadoFilter || route.estado.toLowerCase().includes(estadoFilter.toLowerCase()))
+                      ).map((route) => (
+                        <TableRow key={route.id}>
+                          <TableCell>{route.id}</TableCell>
+                          <TableCell>{route.nombre}</TableCell>
+                          <TableCell>{route.origen}</TableCell>
+                          <TableCell>{route.destino}</TableCell>
+                          <TableCell>{route.estado}</TableCell>
+                          <TableCell>
+                            <IconButton onClick={() => handleEditRoute(route)}>
+                              <Edit />
+                            </IconButton>
+                            <IconButton onClick={() => handleUpdateStatus(route)}>
+                              <Update />
+                            </IconButton>
+                            <IconButton onClick={() => handleAddFuel(route)}>
+                              <LocalGasStation />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
+            {activeTab === 'asignar' && (
+              <>
+                <Typography variant="h4" sx={{ mb: 2 }}>Asignar Vehículos a Choferes</Typography>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Nombre</TableCell>
+                        <TableCell>Documento</TableCell>
+                        <TableCell>Vehículo Asignado</TableCell>
+                        <TableCell>Acciones</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {drivers.filter(driver => !driver.isDeleted && !driver.isAssigned).map((driver) => (
+                        <TableRow key={driver.id}>
+                          <TableCell>{driver.id}</TableCell>
+                          <TableCell>{driver.firstName} {driver.lastName}</TableCell>
+                          <TableCell>{driver.documentNumber}</TableCell>
+                          <TableCell>Ninguno</TableCell>
+                          <TableCell>
+                            <Button variant="contained" onClick={() => handleAssign(driver)}>
+                              Asignar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
+            {activeTab === 'desasignar' && (
+              <>
+                <Typography variant="h4" sx={{ mb: 2 }}>Desasignar Vehículos de Choferes</Typography>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Nombre</TableCell>
+                        <TableCell>Documento</TableCell>
+                        <TableCell>Vehículo Asignado</TableCell>
+                        <TableCell>Acciones</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {drivers.filter(driver => !driver.isDeleted && driver.isAssigned).map((driver) => (
+                        <TableRow key={driver.id}>
+                          <TableCell>{driver.id}</TableCell>
+                          <TableCell>{driver.firstName} {driver.lastName}</TableCell>
+                          <TableCell>{driver.documentNumber}</TableCell>
+                          <TableCell>{driver.assignedVehiclePlaca}</TableCell>
+                          <TableCell>
+                            <Button variant="outlined" color="secondary" onClick={() => handleUnassign(driver)}>
+                              Desasignar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
           </>
-        )}
-        {activeTab === 'asignar' && (
+        ) : (
           <>
-            <Typography variant="h4" sx={{ mb: 2 }}>Asignar Vehículos a Choferes</Typography>
+            <Typography variant="h4" sx={{ mb: 2 }}>{user.role === 'Operador' ? 'Mi Ruta' : 'Rutas'}</Typography>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Nombre"
+                  value={nombreFilter}
+                  onChange={(e) => setNombreFilter(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Origen"
+                  value={origenFilter}
+                  onChange={(e) => setOrigenFilter(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Destino"
+                  value={destinoFilter}
+                  onChange={(e) => setDestinoFilter(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Estado"
+                  value={estadoFilter}
+                  onChange={(e) => setEstadoFilter(e.target.value)}
+                />
+              </Grid>
+            </Grid>
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
                   <TableRow>
                     <TableCell>ID</TableCell>
                     <TableCell>Nombre</TableCell>
-                    <TableCell>Documento</TableCell>
-                    <TableCell>Vehículo Asignado</TableCell>
-                    <TableCell>Acciones</TableCell>
+                    <TableCell>Origen</TableCell>
+                    <TableCell>Destino</TableCell>
+                    <TableCell>Estado</TableCell>
+                    {user.role === 'Admin' && <TableCell>Acciones</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {drivers.filter(driver => !driver.isDeleted && !driver.isAssigned).map((driver) => (
-                    <TableRow key={driver.id}>
-                      <TableCell>{driver.id}</TableCell>
-                      <TableCell>{driver.firstName} {driver.lastName}</TableCell>
-                      <TableCell>{driver.documentNumber}</TableCell>
-                      <TableCell>Ninguno</TableCell>
-                      <TableCell>
-                        <Button variant="contained" onClick={() => handleAssign(driver)}>
-                          Asignar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </>
-        )}
-        {activeTab === 'desasignar' && (
-          <>
-            <Typography variant="h4" sx={{ mb: 2 }}>Desasignar Vehículos de Choferes</Typography>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Nombre</TableCell>
-                    <TableCell>Documento</TableCell>
-                    <TableCell>Vehículo Asignado</TableCell>
-                    <TableCell>Acciones</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {drivers.filter(driver => !driver.isDeleted && driver.isAssigned).map((driver) => (
-                    <TableRow key={driver.id}>
-                      <TableCell>{driver.id}</TableCell>
-                      <TableCell>{driver.firstName} {driver.lastName}</TableCell>
-                      <TableCell>{driver.documentNumber}</TableCell>
-                      <TableCell>{driver.assignedVehiclePlaca}</TableCell>
-                      <TableCell>
-                        <Button variant="outlined" color="secondary" onClick={() => handleUnassign(driver)}>
-                          Desasignar
-                        </Button>
-                      </TableCell>
+                  {routes.filter(route =>
+                    (!nombreFilter || route.nombre.toLowerCase().includes(nombreFilter.toLowerCase())) &&
+                    (!origenFilter || route.origen.toLowerCase().includes(origenFilter.toLowerCase())) &&
+                    (!destinoFilter || route.destino.toLowerCase().includes(destinoFilter.toLowerCase())) &&
+                    (!estadoFilter || route.estado.toLowerCase().includes(estadoFilter.toLowerCase()))
+                  ).map((route) => (
+                    <TableRow key={route.id}>
+                      <TableCell>{route.id}</TableCell>
+                      <TableCell>{route.nombre}</TableCell>
+                      <TableCell>{route.origen}</TableCell>
+                      <TableCell>{route.destino}</TableCell>
+                      <TableCell>{route.estado}</TableCell>
+                      {user.role === 'Admin' && (
+                        <TableCell>
+                          <IconButton onClick={() => handleEditRoute(route)}>
+                            <Edit />
+                          </IconButton>
+                          <IconButton onClick={() => handleUpdateStatus(route)}>
+                            <Update />
+                          </IconButton>
+                          <IconButton onClick={() => handleAddFuel(route)}>
+                            <LocalGasStation />
+                          </IconButton>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

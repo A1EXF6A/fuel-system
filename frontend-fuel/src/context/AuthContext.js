@@ -9,11 +9,12 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      validateToken(token);
-    } else {
-      setLoading(false);
+    const storedUser = localStorage.getItem('user');
+    if (token && storedUser) {
+      setUser(JSON.parse(storedUser));
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
+    setLoading(false);
   }, []);
 
   const login = async (username, password) => {
@@ -24,6 +25,7 @@ export const AuthProvider = ({ children }) => {
       });
       const { token, role } = response.data;
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify({ username, role }));
       setUser({ username, role });
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       return { success: true };
@@ -34,23 +36,9 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
     delete axios.defaults.headers.common['Authorization'];
-  };
-
-  const validateToken = async (token) => {
-    try {
-      const response = await axios.post('http://localhost:5010/api/auth/validate', { token });
-      if (response.data.valid) {
-        setUser({ role: response.data.role });
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      } else {
-        logout();
-      }
-    } catch (error) {
-      logout();
-    }
-    setLoading(false);
   };
 
   return (

@@ -172,7 +172,7 @@ const Drivers = () => {
 
   if (!user) return null;
 
-  if (user.role !== 'Admin') {
+  if (user.role === 'Operador') {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <Typography variant="h4">Se está implementando</Typography>
@@ -258,16 +258,16 @@ const Drivers = () => {
         </Grid>
         <TableContainer component={Paper}>
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Nombre</TableCell>
-                <TableCell>Documento</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Asignado</TableCell>
-                <TableCell>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
+             <TableHead>
+               <TableRow>
+                 <TableCell>ID</TableCell>
+                 <TableCell>Nombre</TableCell>
+                 <TableCell>Documento</TableCell>
+                 <TableCell>Estado</TableCell>
+                 <TableCell>Asignado</TableCell>
+                 {user.role === 'Admin' && <TableCell>Acciones</TableCell>}
+               </TableRow>
+             </TableHead>
             <TableBody>
               {drivers.filter(driver =>
                 !driver.isDeleted &&
@@ -281,14 +281,18 @@ const Drivers = () => {
                   <TableCell>{driver.documentNumber}</TableCell>
                   <TableCell>{driver.status}</TableCell>
                   <TableCell>{driver.isAssigned ? 'Sí' : 'No'}</TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleEdit(driver)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(driver)}>
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
+                   <TableCell>
+                     {user.role === 'Admin' && (
+                       <>
+                         <IconButton onClick={() => handleEdit(driver)}>
+                           <Edit />
+                         </IconButton>
+                         <IconButton onClick={() => handleDelete(driver)}>
+                           <Delete />
+                         </IconButton>
+                       </>
+                     )}
+                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>

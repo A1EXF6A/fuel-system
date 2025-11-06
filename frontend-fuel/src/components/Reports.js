@@ -60,16 +60,36 @@ const Reports = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [newActualLiters, setNewActualLiters] = useState('');
   const [newEstado, setNewEstado] = useState('');
+  const [assignedPlaca, setAssignedPlaca] = useState('');
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login');
-    } else if (user && user.role !== 'Admin') {
-      return;
-    } else if (user && user.role === 'Admin') {
-      fetchReports();
+   useEffect(() => {
+     if (!loading && !user) {
+       navigate('/login');
+     } else if (user && user.role === 'Operador') {
+       fetchDriver();
+       fetchReports();
+     } else if (user && (user.role === 'Admin' || user.role === 'Supervisor')) {
+       fetchReports();
+     }
+   }, [user, loading, navigate]);
+
+   const fetchDriver = async () => {
+    try {
+      const response = await axios.get('http://localhost:5010/api/drivers');
+      let drivers = [];
+      if (Array.isArray(response.data)) {
+        drivers = response.data;
+      } else if (response.data.Drivers) {
+        drivers = response.data.Drivers;
+      }
+      const driver = drivers.find(d => d.documentNumber === user.username);
+      if (driver) {
+        setAssignedPlaca(driver.assignedVehiclePlaca || '');
+      }
+    } catch (error) {
+      console.error('Error fetching driver:', error);
     }
-  }, [user, loading, navigate]);
+  };
 
   const fetchReports = async () => {
     try {
@@ -129,29 +149,27 @@ const Reports = () => {
     }
   };
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login');
-    } else if (user && user.role !== 'Admin') {
-      return;
-    } else if (user && user.role === 'Admin') {
-      fetchReports();
-    }
-  }, [user, loading, navigate]);
+   useEffect(() => {
+     if (!loading && !user) {
+       navigate('/login');
+     } else if (user && user.role === 'Operador') {
+       return;
+     } else if (user && (user.role === 'Admin' || user.role === 'Supervisor')) {
+       fetchReports();
+     }
+   }, [user, loading, navigate]);
 
-  if (loading) return <div>Loading...</div>;
+   if (loading) return <div>Loading...</div>;
 
   if (!user) return null;
 
-  if (user.role !== 'Admin') {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography variant="h4">Se está implementando</Typography>
-      </Box>
-    );
-  }
 
-  const menuItems = [
+
+  const menuItems = user.role === 'Operador' ? [
+    { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
+    { text: 'Ruta', icon: <Route />, path: '/routes' },
+    { text: 'Consumo Combustible', icon: <Assessment />, path: '/reports' }
+  ] : [
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
@@ -164,7 +182,7 @@ const Reports = () => {
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Fuel System - Reportes
+            Fuel System - {user.role === 'Operador' ? 'Consumo de Combustible' : 'Reportes'}
           </Typography>
           <IconButton color="inherit" onClick={logout}>
             <Logout />
@@ -197,71 +215,129 @@ const Reports = () => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 2 }}>
-          <Tab label="Reportes" value="reportes" />
-          <Tab label="Comparación" value="comparacion" />
-        </Tabs>
-        {activeTab === 'reportes' && (
+        {user.role === 'Admin' ? (
+          <>
+            <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 2 }}>
+              <Tab label="Reportes" value="reportes" />
+              <Tab label="Comparación" value="comparacion" />
+            </Tabs>
+            {activeTab === 'reportes' && (
+              <>
+                <Typography variant="h4" gutterBottom>
+                  Reportes de Combustible
+                </Typography>
+                <Grid container spacing={2} sx={{ mb: 2 }}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Filtrar por Vehículo (Placa)"
+                      value={vehiclePlacaFilter}
+                      onChange={(e) => setVehiclePlacaFilter(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Filtrar por Estado"
+                      value={estadoFilter}
+                      onChange={(e) => setEstadoFilter(e.target.value)}
+                    />
+                  </Grid>
+                </Grid>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Vehículo</TableCell>
+                        <TableCell>Nombre de la Ruta</TableCell>
+                        <TableCell>Estimado (L)</TableCell>
+                        <TableCell>Actual (L)</TableCell>
+                        <TableCell>Estado</TableCell>
+                        <TableCell>Acciones</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {reports.filter(report =>
+                        (!vehiclePlacaFilter || report.vehiclePlaca.toLowerCase().includes(vehiclePlacaFilter.toLowerCase())) &&
+                        (!estadoFilter || report.estado.toLowerCase().includes(estadoFilter.toLowerCase()))
+                      ).map((report) => (
+                        <TableRow key={report.id}>
+                          <TableCell>{report.id}</TableCell>
+                          <TableCell>{report.vehiclePlaca}</TableCell>
+                          <TableCell>{report.routeName}</TableCell>
+                          <TableCell>{Math.round(report.estimatedLiters)}</TableCell>
+                          <TableCell>{report.actualLiters}</TableCell>
+                          <TableCell>{report.estado}</TableCell>
+                          <TableCell>
+                            <IconButton onClick={() => handleUpdateLiters(report)}>
+                              <Edit />
+                            </IconButton>
+                            <IconButton onClick={() => handleUpdateStatus(report)}>
+                              <CheckCircle />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
+          </>
+        ) : (
           <>
             <Typography variant="h4" gutterBottom>
-              Reportes de Combustible
+              {user.role === 'Operador' ? 'Consumo de Combustible' : 'Reportes de Combustible'}
             </Typography>
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Filtrar por Vehículo (Placa)"
-              value={vehiclePlacaFilter}
-              onChange={(e) => setVehiclePlacaFilter(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Filtrar por Estado"
-              value={estadoFilter}
-              onChange={(e) => setEstadoFilter(e.target.value)}
-            />
-          </Grid>
-        </Grid>
-        <TableContainer component={Paper}>
-          <Table>
-             <TableHead>
-               <TableRow>
-                 <TableCell>ID</TableCell>
-                 <TableCell>Vehículo</TableCell>
-                 <TableCell>Nombre de la Ruta</TableCell>
-                 <TableCell>Estimado (L)</TableCell>
-                 <TableCell>Actual (L)</TableCell>
-                 <TableCell>Estado</TableCell>
-                 <TableCell>Acciones</TableCell>
-               </TableRow>
-             </TableHead>
-            <TableBody>
-               {reports.filter(report =>
-                 (!vehiclePlacaFilter || report.vehiclePlaca.toLowerCase().includes(vehiclePlacaFilter.toLowerCase())) &&
-                 (!estadoFilter || report.estado.toLowerCase().includes(estadoFilter.toLowerCase()))
-               ).map((report) => (
-                 <TableRow key={report.id}>
-                   <TableCell>{report.id}</TableCell>
-                   <TableCell>{report.vehiclePlaca}</TableCell>
-                   <TableCell>{report.routeName}</TableCell>
-                    <TableCell>{Math.round(report.estimatedLiters)}</TableCell>
-                   <TableCell>{report.actualLiters}</TableCell>
-                   <TableCell>{report.estado}</TableCell>
-                   <TableCell>
-                     <IconButton onClick={() => handleUpdateLiters(report)}>
-                       <Edit />
-                     </IconButton>
-                     <IconButton onClick={() => handleUpdateStatus(report)}>
-                       <CheckCircle />
-                     </IconButton>
-                   </TableCell>
-                 </TableRow>
-               ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Vehículo (Placa)"
+                  value={vehiclePlacaFilter}
+                  onChange={(e) => setVehiclePlacaFilter(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Estado"
+                  value={estadoFilter}
+                  onChange={(e) => setEstadoFilter(e.target.value)}
+                />
+              </Grid>
+            </Grid>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Vehículo</TableCell>
+                    <TableCell>Nombre de la Ruta</TableCell>
+                    <TableCell>Estimado (L)</TableCell>
+                    <TableCell>Actual (L)</TableCell>
+                    <TableCell>Estado</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {reports.filter(report =>
+                    (!vehiclePlacaFilter || report.vehiclePlaca.toLowerCase().includes(vehiclePlacaFilter.toLowerCase())) &&
+                    (!estadoFilter || report.estado.toLowerCase().includes(estadoFilter.toLowerCase())) &&
+                    (user.role !== 'Operador' || report.vehiclePlaca === assignedPlaca)
+                  ).map((report) => (
+                    <TableRow key={report.id}>
+                      <TableCell>{report.id}</TableCell>
+                      <TableCell>{report.vehiclePlaca}</TableCell>
+                      <TableCell>{report.routeName}</TableCell>
+                      <TableCell>{Math.round(report.estimatedLiters)}</TableCell>
+                      <TableCell>{report.actualLiters}</TableCell>
+                      <TableCell>{report.estado}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </>
         )}
         {activeTab === 'comparacion' && (

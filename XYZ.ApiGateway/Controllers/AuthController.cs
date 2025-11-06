@@ -60,6 +60,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("validate")]
+    [AllowAnonymous]
     public async Task<IActionResult> ValidateToken([FromBody] ValidateTokenRequestDto request)
     {
         try

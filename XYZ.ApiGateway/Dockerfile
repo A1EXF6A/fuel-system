@@ -4,9 +4,9 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["XYZ.ApiGateway/XYZ.ApiGateway.csproj", "XYZ.ApiGateway/"]
-COPY ["XYZ.AuthService/Protos/", "XYZ.AuthService/Protos/"]
-COPY ["XYZ.DriversService/Protos/", "XYZ.DriversService/Protos/"]
+COPY ["XYZ.ApiGateway.csproj", "XYZ.ApiGateway/"]
+COPY ["../XYZ.AuthService/Protos/", "XYZ.AuthService/Protos/"]
+COPY ["../XYZ.DriversService/Protos/", "XYZ.DriversService/Protos/"]
 RUN dotnet restore "XYZ.ApiGateway/XYZ.ApiGateway.csproj"
 COPY . .
 WORKDIR "/src/XYZ.ApiGateway"

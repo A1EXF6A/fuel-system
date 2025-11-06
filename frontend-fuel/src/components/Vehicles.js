@@ -197,15 +197,13 @@ const Vehicles = () => {
 
   if (!user) return null;
 
-  if (user.role !== 'Admin') {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography variant="h4">Se está implementando</Typography>
-      </Box>
-    );
-  }
 
-  const menuItems = [
+
+  const menuItems = user.role === 'Operador' ? [
+    { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
+    { text: 'Ruta', icon: <Route />, path: '/routes' },
+    { text: 'Consumo Combustible', icon: <Assessment />, path: '/reports' }
+  ] : [
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
@@ -218,7 +216,7 @@ const Vehicles = () => {
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Fuel System - Vehículos
+            Fuel System - {user.role === 'Operador' ? 'Mi Vehículo' : 'Vehículos'}
           </Typography>
           <IconButton color="inherit" onClick={logout}>
             <Logout />
@@ -253,11 +251,11 @@ const Vehicles = () => {
         <Toolbar />
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
           <Typography variant="h4">Vehículos</Typography>
-          {user && user.role !== 'Operador' && (
-            <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
-              Nuevo Vehículo
-            </Button>
-          )}
+           {user && user.role === 'Admin' && (
+             <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
+               Nuevo Vehículo
+             </Button>
+           )}
         </Box>
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={3}>
@@ -295,16 +293,16 @@ const Vehicles = () => {
         </Grid>
         <TableContainer component={Paper}>
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Placa</TableCell>
-                <TableCell>Marca</TableCell>
-                <TableCell>Modelo</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
+             <TableHead>
+               <TableRow>
+                 <TableCell>ID</TableCell>
+                 <TableCell>Placa</TableCell>
+                 <TableCell>Marca</TableCell>
+                 <TableCell>Modelo</TableCell>
+                 <TableCell>Estado</TableCell>
+                 {user.role === 'Admin' && <TableCell>Acciones</TableCell>}
+               </TableRow>
+             </TableHead>
             <TableBody>
               {vehicles.filter(vehicle =>
                 (!placaFilter || vehicle.placa.toLowerCase().includes(placaFilter.toLowerCase())) &&
@@ -318,14 +316,18 @@ const Vehicles = () => {
                   <TableCell>{vehicle.marca}</TableCell>
                   <TableCell>{vehicle.modelo}</TableCell>
                   <TableCell>{vehicle.estado}</TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleEdit(vehicle)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(vehicle)}>
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
+                   <TableCell>
+                     {user.role === 'Admin' && (
+                       <>
+                         <IconButton onClick={() => handleEdit(vehicle)}>
+                           <Edit />
+                         </IconButton>
+                         <IconButton onClick={() => handleDelete(vehicle)}>
+                           <Delete />
+                         </IconButton>
+                       </>
+                     )}
+                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>

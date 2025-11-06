@@ -74,15 +74,15 @@ const Users = () => {
   const [driverData, setDriverData] = useState(null);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login');
-    } else if (user && user.role !== 'Admin') {
-      return;
-    } else if (user && user.role === 'Admin') {
-      fetchUsers();
-    }
-  }, [user, loading, navigate]);
+   useEffect(() => {
+     if (!loading && !user) {
+       navigate('/login');
+     } else if (user && user.role === 'Operador') {
+       return;
+     } else if (user && (user.role === 'Admin' || user.role === 'Supervisor')) {
+       fetchUsers();
+     }
+   }, [user, loading, navigate]);
 
   const fetchUsers = async () => {
     try {
@@ -235,13 +235,13 @@ const Users = () => {
 
   if (!user) return null;
 
-  if (user.role !== 'Admin') {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography variant="h4">Se está implementando</Typography>
-      </Box>
-    );
-  }
+   if (user.role === 'Operador') {
+     return (
+       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+         <Typography variant="h4">Se está implementando</Typography>
+       </Box>
+     );
+   }
 
   const menuItems = [
     { text: 'Usuarios', icon: <People />, path: '/users' },
@@ -289,12 +289,14 @@ const Users = () => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h4">Usuarios</Typography>
-          <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
-            Nuevo Usuario
-          </Button>
-        </Box>
+         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+           <Typography variant="h4">Usuarios</Typography>
+           {user.role === 'Admin' && (
+             <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
+               Nuevo Usuario
+             </Button>
+           )}
+         </Box>
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={6}>
             <TextField
@@ -315,33 +317,37 @@ const Users = () => {
         </Grid>
         <TableContainer component={Paper}>
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Username</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
+             <TableHead>
+               <TableRow>
+                 <TableCell>ID</TableCell>
+                 <TableCell>Username</TableCell>
+                 <TableCell>Role</TableCell>
+                 {user.role === 'Admin' && <TableCell>Acciones</TableCell>}
+               </TableRow>
+             </TableHead>
             <TableBody>
-              {users.filter(user =>
-                (!usernameFilter || user.username.toLowerCase().includes(usernameFilter.toLowerCase())) &&
-                (!roleFilter || user.role.toLowerCase().includes(roleFilter.toLowerCase()))
-              ).map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleEdit(user)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(user.id)}>
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+               {users.filter(u =>
+                 (!usernameFilter || u.username.toLowerCase().includes(usernameFilter.toLowerCase())) &&
+                 (!roleFilter || u.role.toLowerCase().includes(roleFilter.toLowerCase()))
+               ).map((rowUser) => (
+                 <TableRow key={rowUser.id}>
+                   <TableCell>{rowUser.id}</TableCell>
+                   <TableCell>{rowUser.username}</TableCell>
+                   <TableCell>{rowUser.role}</TableCell>
+                   <TableCell>
+                     {user.role === 'Admin' && (
+                       <>
+                         <IconButton onClick={() => handleEdit(rowUser)}>
+                           <Edit />
+                         </IconButton>
+                         <IconButton onClick={() => handleDelete(rowUser.id)}>
+                           <Delete />
+                         </IconButton>
+                       </>
+                     )}
+                   </TableCell>
+                 </TableRow>
+               ))}
             </TableBody>
           </Table>
         </TableContainer>
