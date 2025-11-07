@@ -238,38 +238,40 @@ const Reports = () => {
                 </Grid>
                 <TableContainer component={Paper}>
                   <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>ID</TableCell>
-                        <TableCell>Vehículo</TableCell>
-                        <TableCell>Nombre de la Ruta</TableCell>
-                        <TableCell>Estimado (L)</TableCell>
-                        <TableCell>Actual (L)</TableCell>
-                        <TableCell>Estado</TableCell>
-                        <TableCell>Acciones</TableCell>
-                      </TableRow>
-                    </TableHead>
+                     <TableHead>
+                       <TableRow>
+                         <TableCell>ID</TableCell>
+                         <TableCell>Vehículo</TableCell>
+                         <TableCell>Nombre de la Ruta</TableCell>
+                         <TableCell>Estimado (L)</TableCell>
+                         <TableCell>Actual (L)</TableCell>
+                         <TableCell>Estado</TableCell>
+                         {(user.role === 'Admin' || user.role === 'Operador') && <TableCell>Acciones</TableCell>}
+                       </TableRow>
+                     </TableHead>
                     <TableBody>
                       {reports.filter(report =>
                         (!vehiclePlacaFilter || report.vehiclePlaca.toLowerCase().includes(vehiclePlacaFilter.toLowerCase())) &&
                         (!estadoFilter || report.estado.toLowerCase().includes(estadoFilter.toLowerCase()))
                       ).map((report) => (
-                        <TableRow key={report.id}>
-                          <TableCell>{report.id}</TableCell>
-                          <TableCell>{report.vehiclePlaca}</TableCell>
-                          <TableCell>{report.routeName}</TableCell>
-                          <TableCell>{Math.round(report.estimatedLiters)}</TableCell>
-                          <TableCell>{report.actualLiters}</TableCell>
-                          <TableCell>{report.estado}</TableCell>
-                          <TableCell>
-                            <IconButton onClick={() => handleUpdateLiters(report)}>
-                              <Edit />
-                            </IconButton>
-                            <IconButton onClick={() => handleUpdateStatus(report)}>
-                              <CheckCircle />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
+                         <TableRow key={report.id}>
+                           <TableCell>{report.id}</TableCell>
+                           <TableCell>{report.vehiclePlaca}</TableCell>
+                           <TableCell>{report.routeName}</TableCell>
+                           <TableCell>{Math.round(report.estimatedLiters)}</TableCell>
+                           <TableCell>{report.actualLiters}</TableCell>
+                           <TableCell>{report.estado}</TableCell>
+                           {(user.role === 'Admin' || user.role === 'Operador') && (
+                             <TableCell>
+                               <IconButton onClick={() => handleUpdateLiters(report)}>
+                                 <Edit />
+                               </IconButton>
+                               <IconButton onClick={() => handleUpdateStatus(report)}>
+                                 <CheckCircle />
+                               </IconButton>
+                             </TableCell>
+                           )}
+                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
@@ -302,39 +304,41 @@ const Reports = () => {
             </Grid>
             <TableContainer component={Paper}>
               <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Vehículo</TableCell>
-                    <TableCell>Nombre de la Ruta</TableCell>
-                     <TableCell>Estimado (L)</TableCell>
-                     <TableCell>Actual (L)</TableCell>
-                     <TableCell>Estado</TableCell>
-                     <TableCell>Acciones</TableCell>
-                   </TableRow>
-                </TableHead>
+                 <TableHead>
+                   <TableRow>
+                     <TableCell>ID</TableCell>
+                     <TableCell>Vehículo</TableCell>
+                     <TableCell>Nombre de la Ruta</TableCell>
+                      <TableCell>Estimado (L)</TableCell>
+                      <TableCell>Actual (L)</TableCell>
+                      <TableCell>Estado</TableCell>
+                      {(user.role === 'Admin' || user.role === 'Operador') && <TableCell>Acciones</TableCell>}
+                    </TableRow>
+                 </TableHead>
                 <TableBody>
                   {reports.filter(report =>
                     (!vehiclePlacaFilter || report.vehiclePlaca.toLowerCase().includes(vehiclePlacaFilter.toLowerCase())) &&
                     (!estadoFilter || report.estado.toLowerCase().includes(estadoFilter.toLowerCase())) &&
                     (user.role !== 'Operador' || report.vehiclePlaca === assignedPlaca)
                   ).map((report) => (
-                    <TableRow key={report.id}>
-                      <TableCell>{report.id}</TableCell>
-                      <TableCell>{report.vehiclePlaca}</TableCell>
-                      <TableCell>{report.routeName}</TableCell>
-                       <TableCell>{Math.round(report.estimatedLiters)}</TableCell>
-                       <TableCell>{report.actualLiters}</TableCell>
-                       <TableCell>{report.estado}</TableCell>
-                       <TableCell>
-                         <IconButton onClick={() => handleUpdateLiters(report)}>
-                           <Edit />
-                         </IconButton>
-                         <IconButton onClick={() => handleUpdateStatus(report)}>
-                           <CheckCircle />
-                         </IconButton>
-                       </TableCell>
-                     </TableRow>
+                     <TableRow key={report.id}>
+                       <TableCell>{report.id}</TableCell>
+                       <TableCell>{report.vehiclePlaca}</TableCell>
+                       <TableCell>{report.routeName}</TableCell>
+                        <TableCell>{Math.round(report.estimatedLiters)}</TableCell>
+                        <TableCell>{report.actualLiters}</TableCell>
+                        <TableCell>{report.estado}</TableCell>
+                        {(user.role === 'Admin' || user.role === 'Operador') && (
+                          <TableCell>
+                            <IconButton onClick={() => handleUpdateLiters(report)}>
+                              <Edit />
+                            </IconButton>
+                            <IconButton onClick={() => handleUpdateStatus(report)}>
+                              <CheckCircle />
+                            </IconButton>
+                          </TableCell>
+                        )}
+                      </TableRow>
                   ))}
                 </TableBody>
               </Table>
