@@ -82,6 +82,7 @@ Cada microservicio sigue una arquitectura en capas:
 - `Auth/Register` - Registro de nuevos usuarios  
 - `Auth/ValidateToken` - Validación de tokens JWT
 - `Auth/RefreshToken` - Renovación de tokens
+- Gestión de usuarios: `ListUsers`, `UpdateUser`, `DeleteUser`
 
 #### Roles del sistema:
 - `Admin` - Administrador del sistema (acceso completo)
@@ -94,9 +95,11 @@ Cada microservicio sigue una arquitectura en capas:
 - **Supervisor**: `supervisor1` / `super123` (sin acceso a drivers)
 
 #### Control de Acceso:
-- **Servicio de Drivers**: Solo usuarios con rol `Admin` pueden acceder
-- **Autenticación**: Todos los roles pueden hacer login
-- **Frontend**: Maneja errores 403 para usuarios sin permisos
+- Roles y políticas se gestionan desde Auth; el Gateway propaga Authorization: Bearer <JWT>.
+
+#### Cómo probar (rápido):
+- `grpcurl -plaintext -d '{"username":"admin","password":"admin123"}' localhost:5000 Auth/Login`
+
 
 ### DriversService
 **Puerto**: `5002`  
@@ -109,6 +112,7 @@ Cada microservicio sigue una arquitectura en capas:
 - `drivers.Drivers/GetAllDrivers` - Listar todos los choferes ⚠️ **Solo Admin**
 - `drivers.Drivers/UpdateDriver` - Actualizar datos del chofer ⚠️ **Solo Admin**
 - `drivers.Drivers/DeleteDriver` - Eliminar chofer ⚠️ **Solo Admin**
+- `drivers.Drivers/GetDriverByDocumentNumber` - Obtener por documento
 - `drivers.Drivers/GetAvailableDrivers` - Obtener choferes disponibles ⚠️ **Solo Admin**
 - `drivers.Drivers/AssignDriver` - Asignar chofer a vehículo ⚠️ **Solo Admin**
 - `drivers.Drivers/UnassignDriver` - Desasignar chofer ⚠️ **Solo Admin**
@@ -131,7 +135,68 @@ Cada microservicio sigue una arquitectura en capas:
 - `Suspended` (4) - Suspendido
 
 #### Datos iniciales:
-- **3 choferes de ejemplo** ya cargados en la base de datos
+- **3 choferes de ejemplo** ya cargados en la base de datos (seed en DriversService)
+
+### VehiclesService
+**Puerto**: `5003`  
+**Protocolo**: gRPC (HTTP/2)  
+**Base de datos**: `XYZ_VehiclesDB` (PostgreSQL en docker-compose)
+
+#### Endpoints disponibles:
+- `vehicles.Vehicles/CreateVehicle` - Crear vehículo
+- `vehicles.Vehicles/GetVehicleByPlaca` - Obtener vehículo por placa
+- `vehicles.Vehicles/SetAssignedDriver` - Asignar/desasignar driver por documento
+- `vehicles.Vehicles/GetVehicleById` - Obtener por id
+- `vehicles.Vehicles/UpdateVehicle` - Actualizar vehículo
+- `vehicles.Vehicles/DeleteVehicle` - Eliminar vehículo
+- `vehicles.Vehicles/GetAllVehicles` - Listar todos los vehículos
+- `vehicles.Vehicles/GetVehicleTypes` - Listar tipos de vehículo
+
+#### Campos importantes (Create/Update):
+- `placa`, `chasis`, `marca`, `modelo`, `anio`, `vehicleTypeId`, `estado`, `km`, `assigned_driver_document`
+
+#### Uso rápido (grpcurl):
+- `grpcurl -plaintext -d '{}' localhost:5003 vehicles.Vehicles/GetAllVehicles`
+- `grpcurl -plaintext -d '{"placa":"ABC-123","chasis":"CHS-0001","marca":"Toyota","modelo":"Hilux","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":0.0,"assigned_driver_document":""}' localhost:5003 vehicles.Vehicles/CreateVehicle`
+
+### RoutesService
+**Puerto**: `5004`  
+**Protocolo**: gRPC (HTTP/2)  
+**Base de datos**: `RoutesDb` (PostgreSQL)
+
+#### Endpoints disponibles:
+- `routes.Routes/CreateRoute` - Crear ruta
+- `routes.Routes/GetRouteById` - Obtener ruta por id
+- `routes.Routes/UpdateRoute` - Actualizar ruta
+- `routes.Routes/DeleteRoute` - Eliminar ruta
+- `routes.Routes/GetAllRoutes` - Listar rutas
+- `routes.Routes/UpdateRouteStatus` - Actualizar estado de ruta
+
+#### Campos importantes (Create/Update):
+- `nombre`, `origen`, `destino`, `vehicle_placa`, `driverId`, `distanciaKm`, `duracionMinutos`, `estado`
+
+#### Uso rápido (grpcurl):
+- `grpcurl -plaintext -d '{}' localhost:5004 routes.Routes/GetAllRoutes`
+
+### FuelService
+**Puerto**: `5006`  
+**Protocolo**: gRPC (HTTP/2)  
+**Base de datos**: `FuelDb` (PostgreSQL)
+
+#### Endpoints disponibles:
+- `fuel.Fuel/CreateFuelPlan` - Crear plan de consumo estimado
+- `fuel.Fuel/RegisterActualConsumption` - Registrar consumo real
+- `fuel.Fuel/GetFuelReport` - Obtener reportes filtrados 
+- `fuel.Fuel/GetAllFuelReports` - Obtener todos los reportes
+- `fuel.Fuel/UpdateReportStatus` - Actualizar estado de reporte
+
+#### Campos importantes:
+- `vehiclePlaca`, `driverId`, `routeId`, `estimatedLiters`, `actualLiters`, `estado`, `tipoMaquinaria`
+
+#### Uso rápido (grpcurl):
+- `grpcurl -plaintext -d '{}' localhost:5006 fuel.Fuel/GetAllFuelReports`
+- `grpcurl -plaintext -d '{"vehiclePlaca":"ABC-123","driverId":1,"routeId":2}' localhost:5006 Fuel/CreateFuelPlan`
+
 
 ## 🚀 Instalación y Despliegue
 
@@ -261,6 +326,120 @@ grpcurl -plaintext -d '{"driver_id":1,"vehicle_placa":"VEH001"}' localhost:5002 
 4. Seleccionar servicio **Auth** y método deseado
 5. Enviar JSON con los datos requeridos
 
+### Pruebas del Gateway (REST) — ejemplos rápidos
+
+El `ApiGateway` expone una API REST que actúa como proxy hacia los microservicios. Por defecto el gateway se ejecuta en http://localhost:5010 (ver `XYZ.ApiGateway/Program.cs`).
+
+Nota: muchas rutas requieren el header Authorization: Bearer <JWT> obtenido mediante login.
+
+Ejemplos en PowerShell (Windows PowerShell 5.1):
+
+# 1) Obtener token (Login) vía Gateway
+```powershell
+$body = @{ Username = 'admin'; Password = 'admin123' } | ConvertTo-Json
+$resp = Invoke-RestMethod -Method Post -Uri 'http://localhost:5010/api/auth/login' -Body $body -ContentType 'application/json'
+$token = $resp.token ?? $resp.Token ?? $resp.accessToken
+Write-Host "Token: $token"
+```
+
+# 2) Validar token (ejemplo usando body)
+```powershell
+$validate = @{ Token = $token } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri 'http://localhost:5010/api/auth/validate' -Body $validate -ContentType 'application/json'
+```
+
+# 3) Crear vehículo (ejemplo JSON embebido)
+```powershell
+$json = @{
+  Placa = 'ABC-123'
+  Chasis = 'CHS-0001'
+  Marca = 'Toyota'
+  Modelo = 'Hilux'
+  Anio = 2020
+  VehicleTypeId = 1
+  Estado = 'Operativo'
+  Km = 0.0
+  AssignedDriverDocument = ''
+} | ConvertTo-Json
+
+Invoke-RestMethod -Method Post -Uri 'http://localhost:5010/api/vehicles' -Headers @{ Authorization = "Bearer $token" } -Body $json -ContentType 'application/json'
+```
+
+Ejemplos con curl (si prefieres):
+
+```bash
+curl -X POST http://localhost:5010/api/auth/login -H "Content-Type: application/json" -d '{"username":"admin","password":"admin123"}'
+
+# Crear vehículo con archivo
+curl -X POST http://localhost:5010/api/vehicles -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d '{"Placa":"ABC-123","Chasis":"CHS-0001","Marca":"Toyota","Modelo":"Hilux","Anio":2020,"VehicleTypeId":1,"Estado":"Operativo","Km":0.0,"AssignedDriverDocument":""}'
+```
+
+Notas importantes:
+-- Si recibes errores 401/403, asegúrate de usar el token correcto y que el rol del usuario tenga permisos para la operación.
+-- El Gateway suele usar PascalCase en los DTOs; revisa los ejemplos JSON embebidos en esta sección.
+
+### Pruebas individuales de servicios (gRPC) — grpcurl
+
+Para probar directamente cada microservicio (sin pasar por el gateway) se recomienda `grpcurl` con server reflection habilitado en modo Development.
+
+Puertos por servicio (host):
+- AuthService: 5000
+- DriversService: 5002
+- VehiclesService: 5003
+- RoutesService: 5004
+- FuelService: 5006
+
+Ejemplos básicos con grpcurl:
+
+# 1) Listar servicios en AuthService
+```bash
+grpcurl -plaintext localhost:5000 list
+```
+
+# 2) Login (AuthService)
+```bash
+grpcurl -plaintext -d '{"username":"admin","password":"admin123"}' localhost:5000 Auth/Login
+```
+
+# 3) Validar token (si el servicio dispone del método ValidateToken)
+```bash
+grpcurl -plaintext -d '{"token":"<TU_TOKEN_AQUI>"}' localhost:5000 Auth/ValidateToken
+```
+
+# 4) VehiclesService - Obtener todos los vehículos
+```bash
+grpcurl -plaintext -d '{}' localhost:5003 vehicles.Vehicles/GetAllVehicles
+```
+
+# 5) VehiclesService - Crear vehículo (ejemplo JSON embebido)
+```bash
+grpcurl -plaintext -d '{"placa":"ABC-123","chasis":"CHS-0001","marca":"Toyota","modelo":"Hilux","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":0.0,"assigned_driver_document":""}' localhost:5003 vehicles.Vehicles/CreateVehicle
+```
+
+# 6) DriversService - Listar choferes
+```bash
+grpcurl -plaintext -d '{}' localhost:5002 drivers.Drivers/GetAllDrivers
+```
+
+# 7) RoutesService - Listar rutas
+```bash
+grpcurl -plaintext -d '{}' localhost:5004 routes.Routes/GetAllRoutes
+```
+
+# 8) FuelService - Ejemplo de consulta
+```bash
+grpcurl -plaintext -d '{}' localhost:5006 fuel.Fuel/GetAllFuelRecords
+```
+
+Consejos:
+- En Windows usa la versión binaria de `grpcurl.exe` y abre PowerShell como administrador si hay problemas de permisos.
+- Si usas Docker Compose, espera a que los contenedores y la base de datos estén listos antes de ejecutar los comandos. Para las bases Postgres/SQL Server puede tardar unos segundos en estar sanas.
+
+Archivos de ejemplo incluidos en el repositorio:
+Nota: los ejemplos de cuerpos JSON para crear/actualizar recursos están embebidos en esta sección del README; no dependemos de ficheros externos.
+
+Si quieres, puedo generar scripts PowerShell listos para ejecutar (uno para el flujo: login -> crear vehículo -> obtener vehículo) o un pequeño conjunto de `curl` y `grpcurl` en `scripts/`.
+
 ## ⚙️ Configuración
 
 ### Variables de Entorno (Docker)
@@ -323,6 +502,122 @@ Para guías detalladas de testing:
 - [ ] Análisis de eficiencia
 
 ## 📁 Estructura del Proyecto
+
+## 🗂️ Documentación de Servicios
+
+Aquí encontrarás un resumen por servicio: puertos, RPCs principales, ejemplos de uso y notas de despliegue.
+
+### XYZ.AuthService
+- Puerto (host): `5000`
+- Protocolo: gRPC (HTTP/2)
+- Servicio proto: `Auth`
+- RPCs principales:
+  - `Login(LoginRequest) returns (AuthResponse)` — obtener JWT
+  - `Register(RegisterRequest) returns (AuthResponse)`
+  - `ValidateToken(ValidateRequest) returns (ValidateResponse)`
+  - `RefreshToken(RefreshRequest) returns (AuthResponse)`
+  - `ListUsers`, `UpdateUser`, `DeleteUser`
+- Uso rápido (grpcurl):
+  - Listar: `grpcurl -plaintext localhost:5000 list`
+  - Login: `grpcurl -plaintext -d '{"username":"admin","password":"admin123"}' localhost:5000 Auth/Login`
+- Base de datos: SQL Server (ver connection string en `appsettings.json`).
+- Cómo arrancar: `cd XYZ.AuthService && dotnet run` o mediante `docker-compose up authservice`.
+
+### XYZ.DriversService
+- Puerto (host): `5002` (gRPC)
+- Protocolo: gRPC (HTTP/2)
+- Servicio proto: `drivers.Drivers`
+- RPCs principales:
+  - `CreateDriver(CreateDriverRequest)`
+  - `GetDriver(GetDriverRequest)`
+  - `GetAllDrivers(GetAllDriversRequest)`
+  - `UpdateDriver(UpdateDriverRequest)`
+  - `DeleteDriver(DeleteDriverRequest)`
+  - `GetDriverByDocumentNumber(GetDriverByDocumentNumberRequest)`
+  - `GetAvailableDrivers(GetAvailableDriversRequest)`
+  - `AssignDriver(AssignDriverRequest)`
+  - `UnassignDriver(UnassignDriverRequest)`
+- Uso rápido (grpcurl):
+  - Listar choferes: `grpcurl -plaintext -d '{}' localhost:5002 drivers.Drivers/GetAllDrivers`
+  - Crear chofer: usa el JSON en `create_driver_example` (ver `Protos/drivers.proto` para campos).
+- Base de datos: SQL Server (conexión definida en `appsettings.json`).
+- Cómo arrancar: `cd XYZ.DriversService && dotnet run` o `docker-compose up driversservice`.
+
+### XYZ.VehiclesService
+- Puerto (host): `5003` (gRPC)
+- Protocolo: gRPC (HTTP/2)
+- Servicio proto: `Vehicles`
+- RPCs principales:
+  - `CreateVehicle(CreateVehicleRequest)`
+  - `GetVehicleByPlaca(GetVehicleByPlacaRequest)`
+  - `SetAssignedDriver(SetAssignedDriverRequest)`
+  - `GetVehicleById(GetVehicleRequest)`
+  - `UpdateVehicle(UpdateVehicleRequest)`
+  - `DeleteVehicle(DeleteVehicleRequest)`
+  - `GetAllVehicles(EmptyRequest)`
+  - `GetVehicleTypes(EmptyRequest)`
+- Uso rápido (grpcurl):
+  - Obtener todos: `grpcurl -plaintext -d '{}' localhost:5003 vehicles.Vehicles/GetAllVehicles`
+  - Crear (ejemplo inline): `grpcurl -plaintext -d '{"placa":"ABC-123","chasis":"CHS-0001","marca":"Toyota","modelo":"Hilux","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":0.0,"assigned_driver_document":""}' localhost:5003 vehicles.Vehicles/CreateVehicle`
+- Base de datos: PostgreSQL (ver `docker-compose.yml` y `appsettings.json`).
+- Cómo arrancar: `cd XYZ.VehiclesService && dotnet run` o `docker-compose up vehiclesservice`.
+
+### XYZ.RoutesService
+- Puerto (host): `5004` (gRPC)
+- Protocolo: gRPC (HTTP/2)
+- Servicio proto: `Routes`
+- RPCs principales:
+  - `CreateRoute(CreateRouteRequest)`
+  - `GetRouteById(GetRouteRequest)`
+  - `UpdateRoute(UpdateRouteRequest)`
+  - `DeleteRoute(DeleteRouteRequest)`
+  - `GetAllRoutes(EmptyRequest)`
+  - `UpdateRouteStatus(UpdateRouteStatusRequest)`
+- Uso rápido (grpcurl):
+  - Listar rutas: `grpcurl -plaintext -d '{}' localhost:5004 routes.Routes/GetAllRoutes`
+- Base de datos: PostgreSQL.
+- Cómo arrancar: `cd XYZ.RoutesService && dotnet run` o `docker-compose up routesservice`.
+
+### XYZ.FuelService
+- Puerto (host): `5006` (gRPC)
+- Protocolo: gRPC (HTTP/2)
+- Servicio proto: `Fuel`
+- RPCs principales:
+  - `CreateFuelPlan(FuelPlanRequest) returns (FuelPlanResponse)`
+  - `RegisterActualConsumption(ActualConsumptionRequest)`
+  - `GetFuelReport(FuelReportRequest)`
+  - `GetAllFuelReports(EmptyRequest)`
+  - `UpdateReportStatus(UpdateReportStatusRequest)`
+- Uso rápido (grpcurl):
+  - Obtener reportes: `grpcurl -plaintext -d '{}' localhost:5006 fuel.Fuel/GetAllFuelReports`
+  - Crear plan: `grpcurl -plaintext -d '{"vehiclePlaca":"ABC-123","driverId":1,"routeId":2}' localhost:5006 Fuel/CreateFuelPlan`
+- Base de datos: PostgreSQL.
+- Cómo arrancar: `cd XYZ.FuelService && dotnet run` o `docker-compose up fuelservice`.
+
+### XYZ.ApiGateway
+- Puerto (host): `5010` (HTTP/1.1 REST)
+- Protocolo: HTTP REST (proxy hacia gRPC)
+- Rutas REST principales (ejemplos):
+  - `POST /api/auth/login` -> reenvía a Auth/Login
+  - `POST /api/auth/validate` -> reenvía a Auth/ValidateToken
+  - `POST /api/vehicles` -> reenvía a Vehicles/CreateVehicle
+  - `GET /api/vehicles` -> listado a Vehicles/GetAllVehicles
+- Uso rápido (PowerShell):
+  - Login: `Invoke-RestMethod -Method Post -Uri 'http://localhost:5010/api/auth/login' -Body $body -ContentType 'application/json'`
+  - Validar token: `Invoke-RestMethod -Method Post -Uri 'http://localhost:5010/api/auth/validate' -Body $validate -ContentType 'application/json'`
+- Notas:
+  - El gateway valida/propaga Authorization: Bearer <JWT> hacia los servicios.
+  - CORS configurado para `http://localhost:3000`.
+
+### Frontend (xyz-frontend / fuel-system-ui)
+- El frontend es una aplicación React (puerto por defecto dev: `3000` localmente).
+- Consumo: llama al `ApiGateway` para todas las operaciones (login, gestión de vehículos, choferes, rutas, consumo).
+- Cómo arrancar:
+  - `cd xyz-frontend && npm install && npm start` (dev)
+  - Para producción construir y servir con nginx configurado en `fuel-system-ui` Dockerfile.
+
+---
+
 
 ```
 fuel-system/

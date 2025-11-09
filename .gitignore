@@ -493,8 +493,22 @@ appsettings.*.json
 *secret*.yaml
 *secret*.yml
 
-* .txt
 dotnet new grpc -n
 docs
 tools
 test-grpc-all.ps1
+* .txt
+docs 
+* .ps1
+scripts
+api_auth_validate_example.txt
+create_update_vehicle_examples.txt
+create_vehicle_sample.txt
+docker-compose.yml
+gateway_driver_route_endpoints.txt
+proyectoEnunciado.txt
+README.md
+serviciosEstructura.txt
+test-grpc-all.ps1
+tmp_gateway_test.ps1
+update_route_4_status_body.txt
