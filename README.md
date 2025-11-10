@@ -2,6 +2,16 @@
 
 Sistema de gestión de combustible basado en microservicios para el manejo de choferes, vehículos, rutas y consumo de combustible, con seguridad JWT y separación entre maquinaria liviana y pesada.
 
+## 🆕 Actualizaciones Recientes (v2.0)
+
+### Mejoras de Noviembre 2025
+- **✅ Upgrade a .NET 9.0**: Migración completa a la última versión LTS de .NET
+- **✅ Unificación de Base de Datos**: Todos los servicios ahora usan PostgreSQL de forma consistente
+- **✅ Consolidación de Migraciones**: Migraciones históricas consolidadas en una única migración por servicio (fecha: 2025-11-10)
+- **✅ Dockerfiles Optimizados**: Actualización a Alpine 3.22 con .NET 9.0 para imágenes más ligeras y seguras
+- **✅ Herramientas EF Core**: Agregado dotnet-ef tools para cada servicio con Entity Framework Core 9.0
+- **✅ Configuración Unificada**: Estandarización de puertos y configuraciones entre servicios
+
 ## 📋 Tabla de Contenidos
 
 - [Arquitectura del Sistema](#-arquitectura-del-sistema)
@@ -50,12 +60,13 @@ Cada microservicio sigue una arquitectura en capas:
 ## 🛠️ Tecnologías
 
 ### Backend
-- **.NET 8.0** - Framework principal
+- **.NET 9.0** - Framework principal actualizado
 - **gRPC** - Comunicación entre servicios
-- **Entity Framework Core** - ORM
-- **SQL Server** - Base de datos
+- **Entity Framework Core 9.0** - ORM
+- **PostgreSQL** - Base de datos principal para todos los servicios
 - **Serilog** - Logging estructurado
 - **JWT** - Autenticación y autorización
+- **Docker Alpine 3.22** - Imágenes base optimizadas
 
 ### Frontend
 - **React** - Framework de interfaz de usuario
@@ -75,7 +86,7 @@ Cada microservicio sigue una arquitectura en capas:
 ### AuthService
 **Puerto**: `5000`  
 **Protocolo**: gRPC (HTTP/2)  
-**Base de datos**: `AuthDb`
+**Base de datos**: `xyz_authdb` (PostgreSQL)
 
 #### Endpoints disponibles:
 - `Auth/Login` - Autenticación de usuarios
@@ -102,9 +113,9 @@ Cada microservicio sigue una arquitectura en capas:
 
 
 ### DriversService
-**Puerto**: `5002`  
+**Puerto**: `5001`  
 **Protocolo**: gRPC (HTTP/2)  
-**Base de datos**: `XYZ_DriversDB`
+**Base de datos**: `xyz_driversdb` (PostgreSQL)
 
 #### Endpoints disponibles:
 - `drivers.Drivers/CreateDriver` - Crear nuevo chofer ⚠️ **Solo Admin**
@@ -138,9 +149,9 @@ Cada microservicio sigue una arquitectura en capas:
 - **3 choferes de ejemplo** ya cargados en la base de datos (seed en DriversService)
 
 ### VehiclesService
-**Puerto**: `5003`  
+**Puerto**: `5002`  
 **Protocolo**: gRPC (HTTP/2)  
-**Base de datos**: `XYZ_VehiclesDB` (PostgreSQL en docker-compose)
+**Base de datos**: `xyz_vehiclesdb` (PostgreSQL)
 
 #### Endpoints disponibles:
 - `vehicles.Vehicles/CreateVehicle` - Crear vehículo
@@ -156,13 +167,13 @@ Cada microservicio sigue una arquitectura en capas:
 - `placa`, `chasis`, `marca`, `modelo`, `anio`, `vehicleTypeId`, `estado`, `km`, `assigned_driver_document`
 
 #### Uso rápido (grpcurl):
-- `grpcurl -plaintext -d '{}' localhost:5003 vehicles.Vehicles/GetAllVehicles`
-- `grpcurl -plaintext -d '{"placa":"ABC-123","chasis":"CHS-0001","marca":"Toyota","modelo":"Hilux","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":0.0,"assigned_driver_document":""}' localhost:5003 vehicles.Vehicles/CreateVehicle`
+- `grpcurl -plaintext -d '{}' localhost:5002 Vehicles/GetAllVehicles`
+- `grpcurl -plaintext -d '{"placa":"ABC-123","chasis":"CHS-0001","marca":"Toyota","modelo":"Hilux","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":0.0,"assigned_driver_document":""}' localhost:5002 Vehicles/CreateVehicle`
 
 ### RoutesService
-**Puerto**: `5004`  
+**Puerto**: `5003`  
 **Protocolo**: gRPC (HTTP/2)  
-**Base de datos**: `RoutesDb` (PostgreSQL)
+**Base de datos**: `xyz_routesdb` (PostgreSQL)
 
 #### Endpoints disponibles:
 - `routes.Routes/CreateRoute` - Crear ruta
@@ -176,12 +187,12 @@ Cada microservicio sigue una arquitectura en capas:
 - `nombre`, `origen`, `destino`, `vehicle_placa`, `driverId`, `distanciaKm`, `duracionMinutos`, `estado`
 
 #### Uso rápido (grpcurl):
-- `grpcurl -plaintext -d '{}' localhost:5004 routes.Routes/GetAllRoutes`
+- `grpcurl -plaintext -d '{}' localhost:5003 Routes/GetAllRoutes`
 
 ### FuelService
-**Puerto**: `5006`  
+**Puerto**: `5004`  
 **Protocolo**: gRPC (HTTP/2)  
-**Base de datos**: `FuelDb` (PostgreSQL)
+**Base de datos**: `xyz_fueldb` (PostgreSQL)
 
 #### Endpoints disponibles:
 - `fuel.Fuel/CreateFuelPlan` - Crear plan de consumo estimado
@@ -194,17 +205,17 @@ Cada microservicio sigue una arquitectura en capas:
 - `vehiclePlaca`, `driverId`, `routeId`, `estimatedLiters`, `actualLiters`, `estado`, `tipoMaquinaria`
 
 #### Uso rápido (grpcurl):
-- `grpcurl -plaintext -d '{}' localhost:5006 fuel.Fuel/GetAllFuelReports`
-- `grpcurl -plaintext -d '{"vehiclePlaca":"ABC-123","driverId":1,"routeId":2}' localhost:5006 Fuel/CreateFuelPlan`
+- `grpcurl -plaintext -d '{}' localhost:5004 Fuel/GetAllFuelReports`
+- `grpcurl -plaintext -d '{"vehiclePlaca":"ABC-123","driverId":1,"routeId":2}' localhost:5004 Fuel/CreateFuelPlan`
 
 
 ## 🚀 Instalación y Despliegue
 
 ### Prerrequisitos
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 - [Node.js](https://nodejs.org/) (para el frontend)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (para despliegue con Docker)
-- [SQL Server](https://www.microsoft.com/sql-server) (para despliegue local sin Docker)
+- [PostgreSQL](https://www.postgresql.org/) (para despliegue local sin Docker)
 - [grpcurl](https://github.com/fullstorydev/grpcurl) (opcional, para testing)
 
 ### 🐳 Despliegue Local con Docker
@@ -256,32 +267,67 @@ docker-compose down
 ### 💻 Despliegue Local sin Docker
 
 #### 1. Configurar Base de Datos
-Actualizar `XYZ.AuthService/appsettings.json`:
+Actualizar los archivos `appsettings.json` de cada servicio:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=AuthDb;Integrated Security=true;TrustServerCertificate=true;"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=xyz_[servicio]db;Username=postgres;Password=postgres;"
   }
 }
 ```
 
+Donde `[servicio]` puede ser: `auth`, `drivers`, `vehicles`, `routes`, o `fuel`.
+
 #### 2. Aplicar Migraciones
+Cada servicio tiene sus propias migraciones consolidadas (fecha: 2025-11-10):
+
 ```bash
+# AuthService
 cd XYZ.AuthService
+dotnet ef database update
+
+# DriversService  
+cd XYZ.DriversService
+dotnet ef database update
+
+# VehiclesService
+cd XYZ.VehiclesService
+dotnet ef database update
+
+# RoutesService
+cd XYZ.RoutesService
+dotnet ef database update
+
+# FuelService
+cd XYZ.FuelService
 dotnet ef database update
 ```
 
-#### 3. Ejecutar el Servicio
+#### 3. Ejecutar cada Servicio
 ```bash
-# Ejecutar en modo desarrollo
+# AuthService (Puerto 5000)
+cd XYZ.AuthService
 dotnet run
 
-# O ejecutar en modo producción
-dotnet run --configuration Release
+# DriversService (Puerto 5001) 
+cd XYZ.DriversService
+dotnet run
+
+# VehiclesService (Puerto 5002)
+cd XYZ.VehiclesService
+dotnet run
+
+# RoutesService (Puerto 5003)
+cd XYZ.RoutesService
+dotnet run
+
+# FuelService (Puerto 5004)
+cd XYZ.FuelService
+dotnet run
 ```
 
 #### 4. Verificar funcionamiento
-El servicio estará disponible en `http://localhost:5000`
+Los servicios estarán disponibles en sus respectivos puertos con gRPC habilitado.
 
 ## 🧪 Testing
 
@@ -299,22 +345,22 @@ grpcurl -plaintext -d '{"username":"admin","password":"admin123"}' localhost:500
 grpcurl -plaintext -d '{"username":"newuser","password":"password123","role":"Operador"}' localhost:5000 Auth/Register
 ```
 
-#### DriversService (Puerto 5002)
+#### DriversService (Puerto 5001)
 ```bash
 # Listar servicios disponibles
-grpcurl -plaintext localhost:5002 list
+grpcurl -plaintext localhost:5001 list
 
 # Obtener todos los choferes
-grpcurl -plaintext -d '{}' localhost:5002 drivers.Drivers/GetAllDrivers
+grpcurl -plaintext -d '{}' localhost:5001 Drivers/GetAllDrivers
 
 # Obtener chofer por ID
-grpcurl -plaintext -d '{"id":1}' localhost:5002 drivers.Drivers/GetDriver
+grpcurl -plaintext -d '{"id":1}' localhost:5001 Drivers/GetDriver
 
 # Crear nuevo chofer
-grpcurl -plaintext -d '{"first_name":"Test","last_name":"Driver","document_number":"99999999","phone_number":"+1234567899","email":"test@company.com","license_number":"LIC999","license_category":2,"license_expiry_date":"2027-12-31T00:00:00Z","driver_type":1,"hire_date":"2024-01-01T00:00:00Z"}' localhost:5002 drivers.Drivers/CreateDriver
+grpcurl -plaintext -d '{"first_name":"Test","last_name":"Driver","document_number":"99999999","phone_number":"+1234567899","email":"test@company.com","license_number":"LIC999","license_category":2,"license_expiry_date":"2027-12-31T00:00:00Z","driver_type":1,"hire_date":"2024-01-01T00:00:00Z"}' localhost:5001 Drivers/CreateDriver
 
 # Asignar chofer a vehículo
-grpcurl -plaintext -d '{"driver_id":1,"vehicle_placa":"VEH001"}' localhost:5002 drivers.Drivers/AssignDriver
+grpcurl -plaintext -d '{"driver_id":1,"vehicle_placa":"VEH001"}' localhost:5001 Drivers/AssignDriver
 ```
 
 > **Nota para Windows**: Si grpcurl no se reconoce, instálalo desde [GitHub Releases](https://github.com/fullstorydev/grpcurl/releases) y agrégalo al PATH del sistema.
@@ -384,10 +430,10 @@ Para probar directamente cada microservicio (sin pasar por el gateway) se recomi
 
 Puertos por servicio (host):
 - AuthService: 5000
-- DriversService: 5002
-- VehiclesService: 5003
-- RoutesService: 5004
-- FuelService: 5006
+- DriversService: 5001
+- VehiclesService: 5002
+- RoutesService: 5003
+- FuelService: 5004
 
 Ejemplos básicos con grpcurl:
 
@@ -408,27 +454,27 @@ grpcurl -plaintext -d '{"token":"<TU_TOKEN_AQUI>"}' localhost:5000 Auth/Validate
 
 # 4) VehiclesService - Obtener todos los vehículos
 ```bash
-grpcurl -plaintext -d '{}' localhost:5003 vehicles.Vehicles/GetAllVehicles
+grpcurl -plaintext -d '{}' localhost:5002 Vehicles/GetAllVehicles
 ```
 
 # 5) VehiclesService - Crear vehículo (ejemplo JSON embebido)
 ```bash
-grpcurl -plaintext -d '{"placa":"ABC-123","chasis":"CHS-0001","marca":"Toyota","modelo":"Hilux","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":0.0,"assigned_driver_document":""}' localhost:5003 vehicles.Vehicles/CreateVehicle
+grpcurl -plaintext -d '{"placa":"ABC-123","chasis":"CHS-0001","marca":"Toyota","modelo":"Hilux","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":0.0,"assigned_driver_document":""}' localhost:5002 Vehicles/CreateVehicle
 ```
 
 # 6) DriversService - Listar choferes
 ```bash
-grpcurl -plaintext -d '{}' localhost:5002 drivers.Drivers/GetAllDrivers
+grpcurl -plaintext -d '{}' localhost:5001 Drivers/GetAllDrivers
 ```
 
 # 7) RoutesService - Listar rutas
 ```bash
-grpcurl -plaintext -d '{}' localhost:5004 routes.Routes/GetAllRoutes
+grpcurl -plaintext -d '{}' localhost:5003 Routes/GetAllRoutes
 ```
 
 # 8) FuelService - Ejemplo de consulta
 ```bash
-grpcurl -plaintext -d '{}' localhost:5006 fuel.Fuel/GetAllFuelRecords
+grpcurl -plaintext -d '{}' localhost:5004 Fuel/GetAllFuelRecords
 ```
 
 Consejos:
@@ -450,13 +496,22 @@ environment:
 ```
 
 ### Configuración de Base de Datos
+Todos los servicios ahora utilizan PostgreSQL como base de datos principal:
+
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=sqlserver;Database=AuthDb;User=sa;Password=Your_password123;TrustServerCertificate=true;Encrypt=false;"
+    "DefaultConnection": "Host=postgres;Port=5432;Database=xyz_[servicio]db;Username=postgres;Password=postgres;"
   }
 }
 ```
+
+**Bases de datos por servicio:**
+- `xyz_authdb` - AuthService
+- `xyz_driversdb` - DriversService  
+- `xyz_vehiclesdb` - VehiclesService
+- `xyz_routesdb` - RoutesService
+- `xyz_fueldb` - FuelService
 
 ### Configuración JWT
 ```json
@@ -524,7 +579,7 @@ Aquí encontrarás un resumen por servicio: puertos, RPCs principales, ejemplos 
 - Cómo arrancar: `cd XYZ.AuthService && dotnet run` o mediante `docker-compose up authservice`.
 
 ### XYZ.DriversService
-- Puerto (host): `5002` (gRPC)
+- Puerto (host): `5001` (gRPC)
 - Protocolo: gRPC (HTTP/2)
 - Servicio proto: `drivers.Drivers`
 - RPCs principales:
@@ -538,13 +593,13 @@ Aquí encontrarás un resumen por servicio: puertos, RPCs principales, ejemplos 
   - `AssignDriver(AssignDriverRequest)`
   - `UnassignDriver(UnassignDriverRequest)`
 - Uso rápido (grpcurl):
-  - Listar choferes: `grpcurl -plaintext -d '{}' localhost:5002 drivers.Drivers/GetAllDrivers`
+  - Listar choferes: `grpcurl -plaintext -d '{}' localhost:5001 Drivers/GetAllDrivers`
   - Crear chofer: usa el JSON en `create_driver_example` (ver `Protos/drivers.proto` para campos).
-- Base de datos: SQL Server (conexión definida en `appsettings.json`).
+- Base de datos: PostgreSQL (conexión definida en `appsettings.json`).
 - Cómo arrancar: `cd XYZ.DriversService && dotnet run` o `docker-compose up driversservice`.
 
 ### XYZ.VehiclesService
-- Puerto (host): `5003` (gRPC)
+- Puerto (host): `5002` (gRPC)
 - Protocolo: gRPC (HTTP/2)
 - Servicio proto: `Vehicles`
 - RPCs principales:
@@ -557,13 +612,13 @@ Aquí encontrarás un resumen por servicio: puertos, RPCs principales, ejemplos 
   - `GetAllVehicles(EmptyRequest)`
   - `GetVehicleTypes(EmptyRequest)`
 - Uso rápido (grpcurl):
-  - Obtener todos: `grpcurl -plaintext -d '{}' localhost:5003 vehicles.Vehicles/GetAllVehicles`
-  - Crear (ejemplo inline): `grpcurl -plaintext -d '{"placa":"ABC-123","chasis":"CHS-0001","marca":"Toyota","modelo":"Hilux","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":0.0,"assigned_driver_document":""}' localhost:5003 vehicles.Vehicles/CreateVehicle`
+  - Obtener todos: `grpcurl -plaintext -d '{}' localhost:5002 Vehicles/GetAllVehicles`
+  - Crear (ejemplo inline): `grpcurl -plaintext -d '{"placa":"ABC-123","chasis":"CHS-0001","marca":"Toyota","modelo":"Hilux","anio":2020,"vehicleTypeId":1,"estado":"Operativo","km":0.0,"assigned_driver_document":""}' localhost:5002 Vehicles/CreateVehicle`
 - Base de datos: PostgreSQL (ver `docker-compose.yml` y `appsettings.json`).
 - Cómo arrancar: `cd XYZ.VehiclesService && dotnet run` o `docker-compose up vehiclesservice`.
 
 ### XYZ.RoutesService
-- Puerto (host): `5004` (gRPC)
+- Puerto (host): `5003` (gRPC)
 - Protocolo: gRPC (HTTP/2)
 - Servicio proto: `Routes`
 - RPCs principales:
@@ -574,12 +629,12 @@ Aquí encontrarás un resumen por servicio: puertos, RPCs principales, ejemplos 
   - `GetAllRoutes(EmptyRequest)`
   - `UpdateRouteStatus(UpdateRouteStatusRequest)`
 - Uso rápido (grpcurl):
-  - Listar rutas: `grpcurl -plaintext -d '{}' localhost:5004 routes.Routes/GetAllRoutes`
+  - Listar rutas: `grpcurl -plaintext -d '{}' localhost:5003 Routes/GetAllRoutes`
 - Base de datos: PostgreSQL.
 - Cómo arrancar: `cd XYZ.RoutesService && dotnet run` o `docker-compose up routesservice`.
 
 ### XYZ.FuelService
-- Puerto (host): `5006` (gRPC)
+- Puerto (host): `5004` (gRPC)
 - Protocolo: gRPC (HTTP/2)
 - Servicio proto: `Fuel`
 - RPCs principales:
@@ -589,8 +644,8 @@ Aquí encontrarás un resumen por servicio: puertos, RPCs principales, ejemplos 
   - `GetAllFuelReports(EmptyRequest)`
   - `UpdateReportStatus(UpdateReportStatusRequest)`
 - Uso rápido (grpcurl):
-  - Obtener reportes: `grpcurl -plaintext -d '{}' localhost:5006 fuel.Fuel/GetAllFuelReports`
-  - Crear plan: `grpcurl -plaintext -d '{"vehiclePlaca":"ABC-123","driverId":1,"routeId":2}' localhost:5006 Fuel/CreateFuelPlan`
+  - Obtener reportes: `grpcurl -plaintext -d '{}' localhost:5004 Fuel/GetAllFuelReports`
+  - Crear plan: `grpcurl -plaintext -d '{"vehiclePlaca":"ABC-123","driverId":1,"routeId":2}' localhost:5004 Fuel/CreateFuelPlan`
 - Base de datos: PostgreSQL.
 - Cómo arrancar: `cd XYZ.FuelService && dotnet run` o `docker-compose up fuelservice`.
 
