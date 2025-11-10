@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using XYZ.DriversService.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using XYZ.DriversService.Infrastructure.Persistence;
 namespace XYZ.DriversService.Migrations
 {
     [DbContext(typeof(DriversDbContext))]
-    partial class DriversDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251110224753_CreateDatabase")]
+    partial class CreateDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -12,15 +12,15 @@ using XYZ.RoutesService.Infrastructure.Persistence;
 namespace XYZ.RoutesService.Migrations
 {
     [DbContext(typeof(RoutesDbContext))]
-    [Migration("20251026032957_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251110224942_CreateDatabase")]
+    partial class CreateDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -29,43 +29,55 @@ namespace XYZ.RoutesService.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Destino")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("destino");
 
                     b.Property<double>("DistanciaKm")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("distancia_km");
 
                     b.Property<int>("DriverId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("driver_id");
 
                     b.Property<double>("DuracionMinutos")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("duracion_minutos");
 
                     b.Property<int>("Estado")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("estado");
 
                     b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("nombre");
 
                     b.Property<string>("Origen")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("origen");
 
-                    b.Property<int>("VehicleId")
-                        .HasColumnType("integer");
+                    b.Property<string>("VehiclePlaca")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("vehicle_placa");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_routes");
 
-                    b.ToTable("Routes");
+                    b.ToTable("routes", (string)null);
                 });
 #pragma warning restore 612, 618
         }

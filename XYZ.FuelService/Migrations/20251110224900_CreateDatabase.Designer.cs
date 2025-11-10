@@ -9,18 +9,18 @@ using XYZ.FuelService.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace XYZ.FuelService.Infrastructure.Migrations
+namespace XYZ.FuelService.Migrations
 {
     [DbContext(typeof(FuelDbContext))]
-    [Migration("20251104164336_AddVehiclePlacaToFuelRecord")]
-    partial class AddVehiclePlacaToFuelRecord
+    [Migration("20251110224900_CreateDatabase")]
+    partial class CreateDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -29,42 +29,57 @@ namespace XYZ.FuelService.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<double>("ActualLiters")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("actual_liters");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<double>("DistanceKm")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("distance_km");
 
                     b.Property<int>("DriverId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("driver_id");
 
                     b.Property<int>("Estado")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("estado");
 
                     b.Property<double>("EstimatedLiters")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("estimated_liters");
 
                     b.Property<int>("RouteId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("route_id");
 
                     b.Property<string>("TipoMaquinaria")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("tipo_maquinaria");
+
+                    b.Property<int>("VehicleId")
+                        .HasColumnType("integer")
+                        .HasColumnName("vehicle_id");
 
                     b.Property<string>("VehiclePlaca")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("vehicle_placa");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_fuel_records");
 
-                    b.ToTable("FuelRecords");
+                    b.ToTable("fuel_records", (string)null);
                 });
 #pragma warning restore 612, 618
         }

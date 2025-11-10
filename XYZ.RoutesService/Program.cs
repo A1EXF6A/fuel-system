@@ -1,50 +1,54 @@
+using Grpc.Reflection;
+using Grpc.Reflection.V1Alpha;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using XYZ.RoutesService.Application.Interfaces;
 using XYZ.RoutesService.Application.Services;
 using XYZ.RoutesService.Infrastructure.Persistence;
 using XYZ.RoutesService.Infrastructure.Repositories;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Grpc.Reflection;
-using Grpc.Reflection.V1Alpha;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog((ctx, lc) => lc
-    .WriteTo.Console()
-    .ReadFrom.Configuration(ctx.Configuration));
+builder.Host.UseSerilog(
+    (ctx, lc) => lc.WriteTo.Console().ReadFrom.Configuration(ctx.Configuration)
+);
+
+string connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<RoutesDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention()
+);
 
-builder.Services.AddHttpClient("GeoClient", client =>
-{
-    client.DefaultRequestHeaders.Add("User-Agent", "XYZ.RoutesService/1.0 (stevan.henao@gmail.com)");
-    client.DefaultRequestHeaders.Add("Accept-Language", "es");
-});
-
+builder.Services.AddHttpClient(
+    "GeoClient",
+    client =>
+    {
+        client.DefaultRequestHeaders.Add(
+            "User-Agent",
+            "XYZ.RoutesService/1.0 (stevan.henao@gmail.com)"
+        );
+        client.DefaultRequestHeaders.Add("Accept-Language", "es");
+    }
+);
 
 builder.Services.AddScoped<IRouteService, RouteService>();
 builder.Services.AddScoped<RouteRepository>();
 builder.Services.AddScoped<GeocodingService>();
 builder.Services.AddGrpc();
+
 // Add gRPC reflection to help debugging and allow tools like grpcurl to discover services
 builder.Services.AddGrpcReflection();
 builder.Services.AddHttpClient();
 
-// Configure Kestrel so gRPC runs on container port 5004 (HTTP/2)
+// Configure Kestrel for HTTP/2 (required for gRPC)
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenAnyIP(5004, listenOptions =>
-    {
-        listenOptions.Protocols = HttpProtocols.Http2;
-    });
-
-    // HTTP/1.1 management/health endpoint
-    options.ListenAnyIP(8084, listenOptions =>
-    {
-        listenOptions.Protocols = HttpProtocols.Http1;
-    });
+    options.ConfigureEndpointDefaults(lo =>
+        lo.Protocols = HttpProtocols.Http2
+    );
 });
 
 var app = builder.Build();
@@ -70,7 +74,12 @@ using (var scope = app.Services.CreateScope())
         }
         catch (Exception ex)
         {
-            app.Logger.LogWarning(ex, "Attempt {Attempt} of {MaxAttempts} applying migrations failed.", attempt, maxAttempts);
+            app.Logger.LogWarning(
+                ex,
+                "Attempt {Attempt} of {MaxAttempts} applying migrations failed.",
+                attempt,
+                maxAttempts
+            );
             if (attempt == maxAttempts)
             {
                 app.Logger.LogError(ex, "Migrations failed after {MaxAttempts} attempts.");

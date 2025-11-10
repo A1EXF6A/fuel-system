@@ -4,8 +4,6 @@ import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "XYZ.DriversService.Protos";
 
-package drivers;
-
 // Servicio de Choferes
 service Drivers {
   rpc CreateDriver(CreateDriverRequest) returns (CreateDriverResponse);

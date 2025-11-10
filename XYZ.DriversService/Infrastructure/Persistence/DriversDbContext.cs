@@ -61,10 +61,10 @@ public class DriversDbContext : DbContext
                 .HasDefaultValue(DriverStatus.Active);
 
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("NOW()");
 
             entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("NOW()");
 
             entity.Property(e => e.IsAssigned)
                 .HasDefaultValue(false);

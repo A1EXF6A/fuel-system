@@ -1,31 +1,21 @@
-# Use the official .NET 8.0 runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine3.22 AS base
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 5001
 
-# Use the official .NET 8.0 SDK image for building
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22 AS build
+ARG TARGETARCH
 WORKDIR /src
 
-# Copy the project file and restore dependencies
-COPY ["XYZ.DriversService.csproj", "./"]
-RUN dotnet restore "XYZ.DriversService.csproj"
+# Install protobuf compiler and glibc compatibility for gRPC
+RUN apk add --no-cache protobuf-dev gcompat
 
-# Copy the entire project and build
-COPY . .
-RUN dotnet build "XYZ.DriversService.csproj" -c Release -o /app/build
+COPY --link *.csproj .
+RUN dotnet restore "XYZ.DriversService.csproj" -a $TARGETARCH
 
-# Publish the application
-FROM build AS publish
-RUN dotnet publish "XYZ.DriversService.csproj" -c Release -o /app/publish /p:UseAppHost=false
+COPY --link . .
+RUN dotnet publish "XYZ.DriversService.csproj" -a $TARGETARCH -c Release -o /app/publish
 
-# Final stage/image
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
-
-# Create logs directory
-RUN mkdir -p /app/logs
-
+COPY --link --from=build /app/publish .
 ENTRYPOINT ["dotnet", "XYZ.DriversService.dll"]

@@ -4,13 +4,14 @@ services:
     image: postgres:15-alpine
     container_name: postgres
     environment:
-      POSTGRES_DB: "authdb"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
     ports:
       - "5432:5432"
     networks:
       - fuel-net
+    volumes:
+      - ./scripts/initdb:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -27,7 +28,8 @@ services:
         condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=XYZ_AuthDB;User Id=sa;Password=Your_password123;TrustServerCertificate=true;
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=xyz_authdb;Username=postgres;Password=postgres;
+      - ASPNETCORE_URLS=http://*:5000
     ports:
       - "5000:5000"
     networks:
@@ -39,28 +41,14 @@ services:
       dockerfile: Dockerfile
     container_name: driversservice
     depends_on:
-      - sqlserver
+      postgres:
+        condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=XYZ_DriversDB;User Id=sa;Password=Your_password123;TrustServerCertificate=true;
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=xyz_driversdb;Username=postgres;Password=postgres
+      - ASPNETCORE_URLS=http://*:5001
     ports:
-      - "5002:80"
-    networks:
-      - fuel-net
-
-  postgres:
-    image: postgres:16
-    container_name: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "5001:5001"
     networks:
       - fuel-net
 
@@ -72,12 +60,13 @@ services:
         condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=XYZ_VehiclesDB;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=xyz_vehiclesdb;Username=postgres;Password=postgres
+      - ASPNETCORE_URLS=http://*:5002
     ports:
-      - "5003:5002"
+      - "5002:5002"
     networks:
       - fuel-net
-      
+
   routesservice:
     build:
       context: ./XYZ.RoutesService
@@ -88,12 +77,12 @@ services:
         condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=RoutesDb;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=xyz_routesdb;Username=postgres;Password=postgres
+      - ASPNETCORE_URLS=http://*:5003
     ports:
-      - "5004:5004"
+      - "5003:5003"
     networks:
       - fuel-net
-
 
   fuelservice:
     build:
@@ -105,10 +94,10 @@ services:
         condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:5006
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=FuelDb;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=xyz_fueldb;Username=postgres;Password=postgres
+      - ASPNETCORE_URLS=http://+:5004
     ports:
-      - "5006:5006"
+      - "5004:5004"
     networks:
       - fuel-net
 

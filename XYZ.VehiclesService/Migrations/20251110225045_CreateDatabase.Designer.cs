@@ -12,15 +12,15 @@ using XYZ.VehiclesService.Infrastructure.Persistence;
 namespace XYZ.VehiclesService.Migrations
 {
     [DbContext(typeof(VehiclesDbContext))]
-    [Migration("20251104044004_AddAssignedDriverDocumentAndUniquePlaca")]
-    partial class AddAssignedDriverDocumentAndUniquePlaca
+    [Migration("20251110225045_CreateDatabase")]
+    partial class CreateDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -29,93 +29,117 @@ namespace XYZ.VehiclesService.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Anio")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("anio");
 
                     b.Property<string>("AssignedDriverDocument")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("assigned_driver_document");
 
                     b.Property<string>("Chasis")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("chasis");
 
                     b.Property<string>("Estado")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("estado");
 
                     b.Property<double>("Km")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("km");
 
                     b.Property<DateTime?>("LastMaintenance")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_maintenance");
 
                     b.Property<string>("Marca")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("marca");
 
                     b.Property<string>("Modelo")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("modelo");
 
                     b.Property<string>("Placa")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("placa");
 
                     b.Property<int>("VehicleTypeId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("vehicle_type_id");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_vehicles");
 
                     b.HasIndex("Placa")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_vehicles_placa");
 
-                    b.HasIndex("VehicleTypeId");
+                    b.HasIndex("VehicleTypeId")
+                        .HasDatabaseName("ix_vehicles_vehicle_type_id");
 
-                    b.ToTable("Vehicles");
+                    b.ToTable("vehicles", (string)null);
                 });
 
             modelBuilder.Entity("XYZ.VehiclesService.Domain.Entities.VehicleType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<double>("ConsumoBase")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("consumo_base");
 
                     b.Property<double>("FactorMotor")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("factor_motor");
 
                     b.Property<double>("Mixto")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("mixto");
 
                     b.Property<double>("Montanoso")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("montanoso");
 
                     b.Property<double>("Pavimentado")
-                        .HasColumnType("double precision");
+                        .HasColumnType("double precision")
+                        .HasColumnName("pavimentado");
 
                     b.Property<string>("Subtipo")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("subtipo");
 
                     b.Property<int>("TipoMaquinaria")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("tipo_maquinaria");
 
                     b.Property<string>("TipoMotor")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("tipo_motor");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_vehicle_types");
 
-                    b.ToTable("VehicleTypes");
+                    b.ToTable("vehicle_types", (string)null);
                 });
 
             modelBuilder.Entity("XYZ.VehiclesService.Domain.Entities.Vehicle", b =>
@@ -124,7 +148,8 @@ namespace XYZ.VehiclesService.Migrations
                         .WithMany()
                         .HasForeignKey("VehicleTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_vehicles_vehicle_types_vehicle_type_id");
 
                     b.Navigation("VehicleType");
                 });
