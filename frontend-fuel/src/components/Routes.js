@@ -4,15 +4,9 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import {
   Box,
-  Drawer,
   AppBar,
   Toolbar,
-  List,
   Typography,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Table,
   TableBody,
   TableCell,
@@ -35,6 +29,7 @@ import {
   Select,
   MenuItem
 } from '@mui/material';
+import Sidebar from './Sidebar';
 import {
   People,
   DriveEta,
@@ -312,30 +307,7 @@ const RoutesComponent = () => {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-        }}
-      >
-        <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
-          <List>
-            {menuItems.map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton onClick={() => navigate(item.path)}>
-                  <ListItemIcon>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      </Drawer>
+      <Sidebar />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         {user.role === 'Admin' ? (
@@ -390,13 +362,13 @@ const RoutesComponent = () => {
                 <TableContainer component={Paper}>
                   <Table>
                     <TableHead>
-                      <TableRow>
-                        <TableCell>ID</TableCell>
-                        <TableCell>Nombre</TableCell>
-                        <TableCell>Origen</TableCell>
-                        <TableCell>Destino</TableCell>
-                        <TableCell>Estado</TableCell>
-                        <TableCell>Acciones</TableCell>
+                      <TableRow sx={{ backgroundColor: '#6366f1' }}>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ID</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Nombre</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Origen</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Destino</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Estado</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Acciones</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -437,12 +409,12 @@ const RoutesComponent = () => {
                 <TableContainer component={Paper}>
                   <Table>
                     <TableHead>
-                      <TableRow>
-                        <TableCell>ID</TableCell>
-                        <TableCell>Nombre</TableCell>
-                        <TableCell>Documento</TableCell>
-                        <TableCell>Vehículo Asignado</TableCell>
-                        <TableCell>Acciones</TableCell>
+                      <TableRow sx={{ backgroundColor: '#6366f1' }}>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ID</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Nombre</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Documento</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Vehículo Asignado</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Acciones</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -470,12 +442,12 @@ const RoutesComponent = () => {
                 <TableContainer component={Paper}>
                   <Table>
                     <TableHead>
-                      <TableRow>
-                        <TableCell>ID</TableCell>
-                        <TableCell>Nombre</TableCell>
-                        <TableCell>Documento</TableCell>
-                        <TableCell>Vehículo Asignado</TableCell>
-                        <TableCell>Acciones</TableCell>
+                      <TableRow sx={{ backgroundColor: '#6366f1' }}>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ID</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Nombre</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Documento</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Vehículo Asignado</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Acciones</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -538,13 +510,13 @@ const RoutesComponent = () => {
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Nombre</TableCell>
-                    <TableCell>Origen</TableCell>
-                    <TableCell>Destino</TableCell>
-                    <TableCell>Estado</TableCell>
-                     {(user.role === 'Admin' || user.role === 'Operador') && <TableCell>Acciones</TableCell>}
+                  <TableRow sx={{ backgroundColor: '#6366f1' }}>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ID</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Nombre</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Origen</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Destino</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Estado</TableCell>
+                     {(user.role === 'Admin' || user.role === 'Operador') && <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Acciones</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>

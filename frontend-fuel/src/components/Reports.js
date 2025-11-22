@@ -4,15 +4,9 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import {
   Box,
-  Drawer,
   AppBar,
   Toolbar,
-  List,
   Typography,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Table,
   TableBody,
   TableCell,
@@ -35,6 +29,7 @@ import {
   Tabs,
   Tab
 } from '@mui/material';
+import Sidebar from './Sidebar';
 import {
   People,
   DriveEta,
@@ -181,30 +176,7 @@ const Reports = () => {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-        }}
-      >
-        <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
-          <List>
-            {menuItems.map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton onClick={() => navigate(item.path)}>
-                  <ListItemIcon>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                 </ListItemButton>
-               </ListItem>
-             ))}
-          </List>
-        </Box>
-      </Drawer>
+      <Sidebar />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         {user.role === 'Admin' ? (
@@ -239,14 +211,14 @@ const Reports = () => {
                 <TableContainer component={Paper}>
                   <Table>
                      <TableHead>
-                       <TableRow>
-                         <TableCell>ID</TableCell>
-                         <TableCell>Vehículo</TableCell>
-                         <TableCell>Nombre de la Ruta</TableCell>
-                         <TableCell>Estimado (L)</TableCell>
-                         <TableCell>Actual (L)</TableCell>
-                         <TableCell>Estado</TableCell>
-                         {(user.role === 'Admin' || user.role === 'Operador') && <TableCell>Acciones</TableCell>}
+                       <TableRow sx={{ backgroundColor: '#6366f1' }}>
+                         <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ID</TableCell>
+                         <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Vehículo</TableCell>
+                         <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Nombre de la Ruta</TableCell>
+                         <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Estimado (L)</TableCell>
+                         <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Actual (L)</TableCell>
+                         <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Estado</TableCell>
+                         {(user.role === 'Admin' || user.role === 'Operador') && <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Acciones</TableCell>}
                        </TableRow>
                      </TableHead>
                     <TableBody>
@@ -305,15 +277,15 @@ const Reports = () => {
             <TableContainer component={Paper}>
               <Table>
                  <TableHead>
-                   <TableRow>
-                     <TableCell>ID</TableCell>
-                     <TableCell>Vehículo</TableCell>
-                     <TableCell>Nombre de la Ruta</TableCell>
-                      <TableCell>Estimado (L)</TableCell>
-                      <TableCell>Actual (L)</TableCell>
-                      <TableCell>Estado</TableCell>
-                      {(user.role === 'Admin' || user.role === 'Operador') && <TableCell>Acciones</TableCell>}
-                    </TableRow>
+                   <TableRow sx={{ backgroundColor: '#6366f1' }}>
+                     <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ID</TableCell>
+                     <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Vehículo</TableCell>
+                     <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Nombre de la Ruta</TableCell>
+                     <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Estimado (L)</TableCell>
+                     <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Actual (L)</TableCell>
+                     <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Estado</TableCell>
+                     {(user.role === 'Admin' || user.role === 'Operador') && <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Acciones</TableCell>}
+                   </TableRow>
                  </TableHead>
                 <TableBody>
                   {reports.filter(report =>
@@ -371,14 +343,14 @@ const Reports = () => {
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Vehículo</TableCell>
-                    <TableCell>Nombre de la Ruta</TableCell>
-                    <TableCell>Estimado (L)</TableCell>
-                    <TableCell>Actual (L)</TableCell>
-                    <TableCell>Diferencia (L)</TableCell>
-                    <TableCell>Estado</TableCell>
+                  <TableRow sx={{ backgroundColor: '#6366f1' }}>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ID</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Vehículo</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Nombre de la Ruta</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Estimado (L)</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Actual (L)</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Diferencia (L)</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Estado</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>

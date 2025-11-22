@@ -4,15 +4,9 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import {
   Box,
-  Drawer,
   AppBar,
   Toolbar,
-  List,
   Typography,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Table,
   TableBody,
   TableCell,
@@ -34,6 +28,7 @@ import {
   InputLabel,
   Grid
 } from '@mui/material';
+import Sidebar from './Sidebar';
 import {
   People,
   DriveEta,
@@ -203,6 +198,12 @@ const Users = () => {
       }
 
       if (formData.role === 'Operador') {
+        // Formatear fechas a ISO 8601
+        const formatDate = (dateStr) => {
+          if (!dateStr) return '';
+          const d = new Date(dateStr);
+          return d.toISOString();
+        };
         const driverPayload = {
           firstName: formData.firstName,
           lastName: formData.lastName,
@@ -211,9 +212,9 @@ const Users = () => {
           email: formData.email,
           licenseNumber: formData.licenseNumber,
           licenseCategory: formData.licenseCategory,
-          licenseExpiryDate: formData.licenseExpiryDate,
+          licenseExpiryDate: formatDate(formData.licenseExpiryDate),
           driverType: formData.driverType,
-          hireDate: formData.hireDate,
+          hireDate: formatDate(formData.hireDate),
           status: formData.status
         };
 
@@ -263,30 +264,7 @@ const Users = () => {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-        }}
-      >
-        <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
-          <List>
-            {menuItems.map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton onClick={() => navigate(item.path)}>
-                  <ListItemIcon>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      </Drawer>
+      <Sidebar />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -317,37 +295,37 @@ const Users = () => {
         </Grid>
         <TableContainer component={Paper}>
           <Table>
-             <TableHead>
-               <TableRow>
-                 <TableCell>ID</TableCell>
-                 <TableCell>Username</TableCell>
-                 <TableCell>Role</TableCell>
-                 {user.role === 'Admin' && <TableCell>Acciones</TableCell>}
-               </TableRow>
-             </TableHead>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#6366f1' }}>
+                <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ID</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Username</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Role</TableCell>
+                {user.role === 'Admin' && <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Acciones</TableCell>}
+              </TableRow>
+            </TableHead>
             <TableBody>
-               {users.filter(u =>
-                 (!usernameFilter || u.username.toLowerCase().includes(usernameFilter.toLowerCase())) &&
-                 (!roleFilter || u.role.toLowerCase().includes(roleFilter.toLowerCase()))
-               ).map((rowUser) => (
-                 <TableRow key={rowUser.id}>
-                   <TableCell>{rowUser.id}</TableCell>
-                   <TableCell>{rowUser.username}</TableCell>
-                   <TableCell>{rowUser.role}</TableCell>
-                   <TableCell>
-                     {user.role === 'Admin' && (
-                       <>
-                         <IconButton onClick={() => handleEdit(rowUser)}>
-                           <Edit />
-                         </IconButton>
-                         <IconButton onClick={() => handleDelete(rowUser.id)}>
-                           <Delete />
-                         </IconButton>
-                       </>
-                     )}
-                   </TableCell>
-                 </TableRow>
-               ))}
+              {users.filter(u =>
+                (!usernameFilter || u.username.toLowerCase().includes(usernameFilter.toLowerCase())) &&
+                (!roleFilter || u.role.toLowerCase().includes(roleFilter.toLowerCase()))
+              ).map((rowUser) => (
+                <TableRow key={rowUser.id}>
+                  <TableCell>{rowUser.id}</TableCell>
+                  <TableCell>{rowUser.username}</TableCell>
+                  <TableCell>{rowUser.role}</TableCell>
+                  <TableCell>
+                    {user.role === 'Admin' && (
+                      <>
+                        <IconButton onClick={() => handleEdit(rowUser)}>
+                          <Edit />
+                        </IconButton>
+                        <IconButton onClick={() => handleDelete(rowUser.id)}>
+                          <Delete />
+                        </IconButton>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>

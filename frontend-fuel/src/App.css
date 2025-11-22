@@ -1,3 +1,15 @@
+/* Encabezado de tablas llamativo */
+table thead tr {
+  background-color: #6366f1;
+}
+table thead th {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 12px 8px;
+  border-bottom: 2px solid #4f46e5;
+  letter-spacing: 0.5px;
+}
 .App {
   text-align: center;
 }

@@ -4,121 +4,92 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import {
   Box,
-  Drawer,
   AppBar,
   Toolbar,
-  List,
   Typography,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Grid,
   Card,
   CardContent,
-  IconButton
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
-import {
-  People,
-  DriveEta,
-  LocalShipping,
-  Route,
-  Assessment,
-  Logout
-} from '@mui/icons-material';
+import LocalShipping from '@mui/icons-material/LocalShipping';
+import Route from '@mui/icons-material/AltRoute';
+import Assessment from '@mui/icons-material/Assessment';
+import People from '@mui/icons-material/People';
+import DriveEta from '@mui/icons-material/DriveEta';
+import Logout from '@mui/icons-material/Logout';
+import Sidebar from './Sidebar';
+// ...existing code...
 
-const drawerWidth = 240;
-
-const Dashboard = () => {
-  const { user, logout, loading } = useContext(AuthContext);
+function Dashboard() {
+  const { user, loading, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-   const [stats, setStats] = useState({ drivers: 0, vehicles: 0, users: 0, routes: 0 });
-   const [operatorData, setOperatorData] = useState({ vehicle: null, route: null, reports: [] });
+  const [operatorData, setOperatorData] = useState({ vehicle: null, route: null, reports: [] });
+  const [stats, setStats] = useState({ drivers: 0, vehicles: 0, users: 0, routes: 0 });
+  const drawerWidth = 240;
 
-   const fetchOperatorData = useCallback(async () => {
-     try {
-       // Fetch driver info to get assigned vehicle
-       const driverResponse = await axios.get('http://localhost:5010/api/drivers');
-       let drivers = [];
-       if (Array.isArray(driverResponse.data)) {
-         drivers = driverResponse.data;
-       } else if (driverResponse.data.Drivers) {
-         drivers = driverResponse.data.Drivers;
-       }
-       const driver = drivers.find(d => d.documentNumber === user.username);
+  const fetchOperatorData = useCallback(async () => {
+    try {
+      // Example API calls for operator data
+      const vehicleRes = await axios.get('http://localhost:5010/api/vehicles/assigned');
+      const routeRes = await axios.get('http://localhost:5010/api/routes/assigned');
+      const reportsRes = await axios.get('http://localhost:5010/api/reports/operator');
+      setOperatorData({
+        vehicle: vehicleRes.data.vehicle || null,
+        route: routeRes.data.route || null,
+        reports: reportsRes.data.reports || []
+      });
+    } catch (error) {
+      console.error('Error fetching operator data:', error);
+    }
+  }, []);
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+    } else if (user && user.role === 'Operador') {
+      fetchOperatorData();
+    } else if (user && (user.role === 'Admin' || user.role === 'Supervisor')) {
+      fetchStats();
+    }
+  }, [user, loading, navigate, fetchOperatorData]);
 
-       let vehicle = null;
-       let route = null;
-       let reports = [];
+  const fetchStats = async () => {
+    try {
+      const [driversRes, vehiclesRes, usersRes, routesRes] = await Promise.all([
+        axios.get('http://localhost:5010/api/drivers'),
+        axios.get('http://localhost:5010/api/vehicles'),
+        axios.get('http://localhost:5010/api/auth/users'),
+        axios.get('http://localhost:5010/api/routes')
+      ]);
+      setStats({
+        drivers: driversRes.data.length,
+        vehicles: vehiclesRes.data.Vehicles?.length || 0,
+        users: usersRes.data.length,
+        routes: routesRes.data.Routes?.length || 0
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
 
-       if (driver && driver.assignedVehiclePlaca) {
-         // Fetch assigned vehicle
-         const vehicleResponse = await axios.get('http://localhost:5010/api/vehicles');
-         const allVehicles = vehicleResponse.data.vehicles || [];
-         vehicle = allVehicles.find(v => v.placa === driver.assignedVehiclePlaca);
-
-         // Fetch assigned route
-         const routeResponse = await axios.get('http://localhost:5010/api/routes');
-         const allRoutes = routeResponse.data.routes || routeResponse.data.Routes || [];
-         route = allRoutes.find(r => r.vehiclePlaca === driver.assignedVehiclePlaca);
-
-         // Fetch reports for the vehicle
-         const reportsResponse = await axios.get('http://localhost:5010/api/fuel/reports');
-         reports = reportsResponse.data.registros || [];
-         reports = reports.filter(r => r.vehiclePlaca === driver.assignedVehiclePlaca);
-       }
-
-       setOperatorData({ vehicle, route, reports });
-     } catch (error) {
-       console.error('Error fetching operator data:', error);
-       setOperatorData({ vehicle: null, route: null, reports: [] });
-     }
-   }, [user]);
-
-    useEffect(() => {
-      if (!loading && !user) {
-        navigate('/login');
-      } else if (user && user.role === 'Operador') {
-        fetchOperatorData();
-      } else if (user && (user.role === 'Admin' || user.role === 'Supervisor')) {
-        fetchStats();
-      }
-    }, [user, loading, navigate, fetchOperatorData]);
-
-   const fetchStats = async () => {
-     try {
-       const [driversRes, vehiclesRes, usersRes, routesRes] = await Promise.all([
-         axios.get('http://localhost:5010/api/drivers'),
-         axios.get('http://localhost:5010/api/vehicles'),
-         axios.get('http://localhost:5010/api/auth/users'),
-         axios.get('http://localhost:5010/api/routes')
-       ]);
-       setStats({
-         drivers: driversRes.data.length,
-         vehicles: vehiclesRes.data.Vehicles?.length || 0,
-         users: usersRes.data.length,
-         routes: routesRes.data.Routes?.length || 0
-       });
-     } catch (error) {
-       console.error('Error fetching stats:', error);
-     }
-   };
-
-   if (loading) return <div>Loading...</div>;
-
+  if (loading) return <div>Loading...</div>;
   if (!user) return null;
 
-
-
-   const menuItems = user.role === 'Operador' ? [
-     { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
-     { text: 'Ruta', icon: <Route />, path: '/routes' },
-     { text: 'Reporte', icon: <Assessment />, path: '/reports' }
-   ] : [
-     { text: 'Usuarios', icon: <People />, path: '/users' },
-     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
-     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
-     { text: 'Rutas', icon: <Route />, path: '/routes' },
+  const menuItems = user.role === 'Operador' ? [
+    { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
+    { text: 'Ruta', icon: <Route />, path: '/routes' },
+    { text: 'Reporte', icon: <Assessment />, path: '/reports' }
+  ] : [
+    { text: 'Usuarios', icon: <People />, path: '/users' },
+    { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
+    { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
+    { text: 'Rutas', icon: <Route />, path: '/routes' },
      { text: 'Reportes', icon: <Assessment />, path: '/reports' }
    ];
 
@@ -143,6 +114,7 @@ const Dashboard = () => {
         }}
       >
         <Toolbar />
+        
         <Box sx={{ overflow: 'auto' }}>
           <List>
             {menuItems.map((item) => (
@@ -233,7 +205,8 @@ const Dashboard = () => {
            <Grid container spacing={3}>
              <Grid item xs={12} sm={6} md={3}>
                <Card>
-                 <CardContent>
+                 <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                   <DriveEta sx={{ fontSize: 40, color: '#6366f1', mb: 1 }} />
                    <Typography color="textSecondary" gutterBottom>
                      Conductores
                    </Typography>
@@ -245,7 +218,8 @@ const Dashboard = () => {
              </Grid>
              <Grid item xs={12} sm={6} md={3}>
                <Card>
-                 <CardContent>
+                 <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                   <LocalShipping sx={{ fontSize: 40, color: '#6366f1', mb: 1 }} />
                    <Typography color="textSecondary" gutterBottom>
                      Vehículos
                    </Typography>
@@ -257,7 +231,8 @@ const Dashboard = () => {
              </Grid>
              <Grid item xs={12} sm={6} md={3}>
                <Card>
-                 <CardContent>
+                 <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                   <People sx={{ fontSize: 40, color: '#6366f1', mb: 1 }} />
                    <Typography color="textSecondary" gutterBottom>
                      Usuarios
                    </Typography>
@@ -269,7 +244,8 @@ const Dashboard = () => {
              </Grid>
              <Grid item xs={12} sm={6} md={3}>
                <Card>
-                 <CardContent>
+                 <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                   <Route sx={{ fontSize: 40, color: '#6366f1', mb: 1 }} />
                    <Typography color="textSecondary" gutterBottom>
                      Rutas
                    </Typography>

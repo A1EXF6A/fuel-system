@@ -4,36 +4,31 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import {
   Box,
-  Drawer,
   AppBar,
   Toolbar,
-  List,
   Typography,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  Button,
-  IconButton,
-  TextField,
-  Grid,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Alert,
-  Select,
-  MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  IconButton,
+  Button,
+  Grid,
+  TextField,
+  Paper,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Select,
+  MenuItem
 } from '@mui/material';
+import Sidebar from './Sidebar';
 import {
   People,
   DriveEta,
@@ -223,30 +218,7 @@ const Vehicles = () => {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-        }}
-      >
-        <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
-          <List>
-            {menuItems.map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton onClick={() => navigate(item.path)}>
-                  <ListItemIcon>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      </Drawer>
+      <Sidebar />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -294,13 +266,13 @@ const Vehicles = () => {
         <TableContainer component={Paper}>
           <Table>
              <TableHead>
-               <TableRow>
-                 <TableCell>ID</TableCell>
-                 <TableCell>Placa</TableCell>
-                 <TableCell>Marca</TableCell>
-                 <TableCell>Modelo</TableCell>
-                 <TableCell>Estado</TableCell>
-                 {user.role === 'Admin' && <TableCell>Acciones</TableCell>}
+               <TableRow sx={{ backgroundColor: '#6366f1' }}>
+                 <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ID</TableCell>
+                 <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Placa</TableCell>
+                 <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Marca</TableCell>
+                 <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Modelo</TableCell>
+                 <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Estado</TableCell>
+                 {user.role === 'Admin' && <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>Acciones</TableCell>}
                </TableRow>
              </TableHead>
             <TableBody>
