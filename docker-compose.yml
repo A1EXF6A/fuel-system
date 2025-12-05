@@ -19,9 +19,7 @@ services:
       retries: 5
 
   authservice:
-    build:
-      context: ./XYZ.AuthService
-      dockerfile: Dockerfile
+    image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: authservice
     depends_on:
       postgres:
@@ -34,11 +32,18 @@ services:
       - "5000:5000"
     networks:
       - fuel-net
+    volumes:
+      - ./XYZ.AuthService:/app
+    working_dir: /app
+    command: |
+      sh -c "
+        apk add --no-cache protobuf-dev gcompat &&
+        dotnet restore &&
+        dotnet run --urls http://*:5000
+      "
 
   driversservice:
-    build:
-      context: ./XYZ.DriversService
-      dockerfile: Dockerfile
+    image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: driversservice
     depends_on:
       postgres:
@@ -51,9 +56,18 @@ services:
       - "5001:5001"
     networks:
       - fuel-net
+    volumes:
+      - ./XYZ.DriversService:/app
+    working_dir: /app
+    command: |
+      sh -c "
+        apk add --no-cache protobuf-dev gcompat &&
+        dotnet restore &&
+        dotnet run --urls http://*:5001
+      "
 
   vehiclesservice:
-    build: ./XYZ.VehiclesService
+    image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: vehiclesservice
     depends_on:
       postgres:
@@ -66,11 +80,18 @@ services:
       - "5002:5002"
     networks:
       - fuel-net
+    volumes:
+      - ./XYZ.VehiclesService:/app
+    working_dir: /app
+    command: |
+      sh -c "
+        apk add --no-cache protobuf-dev gcompat &&
+        dotnet restore &&
+        dotnet run --urls http://*:5002
+      "
 
   routesservice:
-    build:
-      context: ./XYZ.RoutesService
-      dockerfile: Dockerfile
+    image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: routesservice
     depends_on:
       postgres:
@@ -83,11 +104,18 @@ services:
       - "5003:5003"
     networks:
       - fuel-net
+    volumes:
+      - ./XYZ.RoutesService:/app
+    working_dir: /app
+    command: |
+      sh -c "
+        apk add --no-cache protobuf-dev gcompat &&
+        dotnet restore &&
+        dotnet run --urls http://*:5003
+      "
 
   fuelservice:
-    build:
-      context: ./XYZ.FuelService
-      dockerfile: Dockerfile
+    image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: fuelservice
     depends_on:
       postgres:
@@ -100,6 +128,41 @@ services:
       - "5004:5004"
     networks:
       - fuel-net
+    volumes:
+      - ./XYZ.FuelService:/app
+    working_dir: /app
+    command: |
+      sh -c "
+        apk add --no-cache protobuf-dev gcompat &&
+        dotnet restore &&
+        dotnet run --urls http://+:5004
+      "
+
+  apigateway:
+    image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
+    container_name: apigateway
+    depends_on:
+      - authservice
+      - driversservice
+      - vehiclesservice
+      - routesservice
+      - fuelservice
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://*:80
+    ports:
+      - "8080:80"
+    networks:
+      - fuel-net
+    volumes:
+      - ./XYZ.ApiGateway:/app
+    working_dir: /app
+    command: |
+      sh -c "
+        apk add --no-cache protobuf-dev gcompat &&
+        dotnet restore &&
+        dotnet run --urls http://*:80
+      "
 
 networks:
   fuel-net:
