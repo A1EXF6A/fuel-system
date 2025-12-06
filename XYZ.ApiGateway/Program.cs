@@ -156,6 +156,18 @@ static int? ExtractPortFromUrl(string url)
 
     try
     {
+        // Handle wildcard addresses like http://*:5010
+        if (url.Contains("*:"))
+        {
+            var portSection = url.Split('*')[1];
+            if (portSection.StartsWith(':'))
+            {
+                var portStr = portSection.Substring(1);
+                if (int.TryParse(portStr, out int port))
+                    return port;
+            }
+        }
+        
         var uri = new Uri(url);
         return uri.Port;
     }
