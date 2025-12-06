@@ -102,7 +102,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=34.31.6.243;Port=5432;Database=xyz_fueldb;Username=postgres;Password=Postgres123$;
-      - ASPNETCORE_URLS=http://+:5004
+      - ASPNETCORE_URLS=http://*:5004
     ports:
       - "5004:5004"
     networks:
@@ -114,7 +114,7 @@ services:
       sh -c "
         apk add --no-cache protobuf-dev gcompat &&
         dotnet restore &&
-        dotnet run --urls http://+:5004
+        dotnet run --urls http://*:5004
       "
 
   apigateway:
@@ -128,9 +128,9 @@ services:
       - fuelservice
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://*:80
+      - ASPNETCORE_URLS=http://*:5010
     ports:
-      - "8080:80"
+      - "5010:5010"
     networks:
       - fuel-net
     volumes:
@@ -140,7 +140,7 @@ services:
       sh -c "
         apk add --no-cache protobuf-dev gcompat &&
         dotnet restore &&
-        dotnet run --urls http://*:80
+        dotnet run --urls http://*:5010
       "
 
 networks:

@@ -27,4 +27,6 @@ RUN dotnet publish "XYZ.ApiGateway.csproj" -a $TARGETARCH -c Release -o /app/pub
 FROM base AS final
 WORKDIR /app
 COPY --link --from=build /app/publish .
+# Set default port but allow override via --urls parameter
+ENV ASPNETCORE_URLS=http://+:80
 ENTRYPOINT ["dotnet", "XYZ.ApiGateway.dll"]
