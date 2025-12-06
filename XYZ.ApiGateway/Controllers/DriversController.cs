@@ -76,11 +76,7 @@ public class DriversController : ControllerBase
                 updatedAt = d.UpdatedAt.ToDateTime(),
                 isAssigned = d.IsAssigned,
                 assignedVehiclePlaca = d.AssignedVehiclePlaca,
-                assignmentDate = d.AssignmentDate?.ToDateTime(),
-                isDeleted = d.IsDeleted,
-                deletedAt = d.DeletedAt?.ToDateTime(),
-                deletedBy = d.DeletedBy,
-                deletionReason = d.DeletionReason
+                assignmentDate = d.AssignmentDate?.ToDateTime()
             }).ToList();
 
             return Ok(drivers);
@@ -358,84 +354,11 @@ public class DriversController : ControllerBase
         }
     }
 
-    [HttpPost("{id}/restore")]
-    public async Task<IActionResult> RestoreDriver(int id)
-    {
-        try
-        {
-            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
-            {
-                return Forbid();
-            }
 
-            var response = await _driversService.RestoreDriverAsync(id);
-            return Ok(new { success = response.Success });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
 
-    [HttpGet("deleted")]
-    public async Task<IActionResult> GetDeletedDrivers()
-    {
-        try
-        {
-            var response = await _driversService.GetDeletedDriversAsync();
-            var drivers = response.Drivers.Select(d => new
-            {
-                id = d.Id,
-                firstName = d.FirstName,
-                lastName = d.LastName,
-                documentNumber = d.DocumentNumber,
-                phoneNumber = d.PhoneNumber,
-                email = d.Email,
-                licenseNumber = d.LicenseNumber,
-                licenseCategory = d.LicenseCategory,
-                licenseExpiryDate = d.LicenseExpiryDate.ToDateTime(),
-                driverType = d.DriverType,
-                status = d.Status,
-                hireDate = d.HireDate.ToDateTime(),
-                createdAt = d.CreatedAt.ToDateTime(),
-                updatedAt = d.UpdatedAt.ToDateTime(),
-                isAssigned = d.IsAssigned,
-                assignedVehiclePlaca = d.AssignedVehiclePlaca,
-                assignmentDate = d.AssignmentDate?.ToDateTime(),
-                isDeleted = d.IsDeleted,
-                deletedAt = d.DeletedAt?.ToDateTime(),
-                deletedBy = d.DeletedBy,
-                deletionReason = d.DeletionReason
-            }).ToList();
 
-            return Ok(drivers);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
 
-    [HttpDelete("{id}/permanent")]
-    public async Task<IActionResult> HardDeleteDriver(int id)
-    {
-        try
-        {
-            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
-            {
-                return Forbid();
-            }
 
-            var response = await _driversService.HardDeleteDriverAsync(id);
-            return Ok(new { success = response.Success });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
 }
 
 public record CreateDriverRequestDto(

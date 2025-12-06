@@ -177,12 +177,7 @@ public class DriversGatewayService
     {
         try
         {
-            var request = new DeleteDriverRequest 
-            { 
-                Id = id,
-                DeletedBy = deletedBy,
-                Reason = reason ?? string.Empty
-            };
+            var request = new DeleteDriverRequest { Id = id };
             var metadata = BuildAuthMetadata();
             var response = await _driversClient.DeleteDriverAsync(request, metadata);
             return response;
@@ -194,60 +189,7 @@ public class DriversGatewayService
         }
     }
 
-    public async Task<RestoreDriverResponse> RestoreDriverAsync(int id)
-    {
-        try
-        {
-            var request = new RestoreDriverRequest { Id = id };
-            var metadata = BuildAuthMetadata();
-            var response = await _driversClient.RestoreDriverAsync(request, metadata);
-            return response;
-        }
-        catch (RpcException ex)
-        {
-            _logger.LogError(ex, "Error restoring driver with ID: {DriverId}", id);
-            throw new Exception($"Failed to restore driver: {ex.Status.Detail}");
-        }
-    }
 
-    public async Task<GetDeletedDriversResponse> GetDeletedDriversAsync()
-    {
-        try
-        {
-            var request = new GetDeletedDriversRequest();
-            var metadata = BuildAuthMetadata();
-            var response = await _driversClient.GetDeletedDriversAsync(request, metadata);
-            return response;
-        }
-        catch (RpcException ex)
-        {
-            // If the drivers service doesn't implement this RPC, return an empty response
-            if (ex.StatusCode == StatusCode.Unimplemented)
-            {
-                _logger.LogWarning("GetDeletedDrivers is unimplemented on drivers service; returning empty list.");
-                return new GetDeletedDriversResponse();
-            }
-
-            _logger.LogError(ex, "Error getting deleted drivers");
-            throw new Exception($"Failed to get deleted drivers: {ex.Status.Detail}");
-        }
-    }
-
-    public async Task<HardDeleteDriverResponse> HardDeleteDriverAsync(int id)
-    {
-        try
-        {
-            var request = new HardDeleteDriverRequest { Id = id };
-            var metadata = BuildAuthMetadata();
-            var response = await _driversClient.HardDeleteDriverAsync(request, metadata);
-            return response;
-        }
-        catch (RpcException ex)
-        {
-            _logger.LogError(ex, "Error hard deleting driver with ID: {DriverId}", id);
-            throw new Exception($"Failed to hard delete driver: {ex.Status.Detail}");
-        }
-    }
 
     public async Task<GetDriverResponse> GetDriverByDocumentNumberAsync(string documentNumber)
     {
