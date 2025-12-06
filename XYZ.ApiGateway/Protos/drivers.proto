@@ -4,8 +4,6 @@ import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "XYZ.DriversService.Protos";
 
-package drivers;
-
 // Servicio de Choferes
 service Drivers {
   rpc CreateDriver(CreateDriverRequest) returns (CreateDriverResponse);
@@ -14,9 +12,6 @@ service Drivers {
   rpc UpdateDriver(UpdateDriverRequest) returns (UpdateDriverResponse);
   rpc DeleteDriver(DeleteDriverRequest) returns (DeleteDriverResponse);
   rpc GetDriverByDocumentNumber(GetDriverByDocumentNumberRequest) returns (GetDriverResponse);
-  rpc RestoreDriver(RestoreDriverRequest) returns (RestoreDriverResponse);
-  rpc GetDeletedDrivers(GetDeletedDriversRequest) returns (GetDeletedDriversResponse);
-  rpc HardDeleteDriver(HardDeleteDriverRequest) returns (HardDeleteDriverResponse);
   rpc GetAvailableDrivers(GetAvailableDriversRequest) returns (GetAvailableDriversResponse);
   rpc AssignDriver(AssignDriverRequest) returns (AssignDriverResponse);
   rpc UnassignDriver(UnassignDriverRequest) returns (UnassignDriverResponse);
@@ -58,23 +53,10 @@ message UpdateDriverRequest {
 
 message DeleteDriverRequest {
   int32 id = 1;
-  string deleted_by = 2;
-  string reason = 3;
 }
 
 message GetDriverByDocumentNumberRequest {
   string document_number = 1;
-}
-
-message RestoreDriverRequest {
-  int32 id = 1;
-}
-
-message GetDeletedDriversRequest {
-}
-
-message HardDeleteDriverRequest {
-  int32 id = 1;
 }
 
 message GetAvailableDriversRequest {
@@ -119,20 +101,6 @@ message DeleteDriverResponse {
   string message = 2;
 }
 
-message RestoreDriverResponse {
-  bool success = 1;
-  string message = 2;
-}
-
-message GetDeletedDriversResponse {
-  repeated Driver drivers = 1;
-}
-
-message HardDeleteDriverResponse {
-  bool success = 1;
-  string message = 2;
-}
-
 message AssignDriverResponse {
   bool success = 1;
   string message = 2;
@@ -162,8 +130,4 @@ message Driver {
   bool is_assigned = 15;
   string assigned_vehicle_placa = 16;
   google.protobuf.Timestamp assignment_date = 17;
-  bool is_deleted = 18;
-  google.protobuf.Timestamp deleted_at = 19;
-  string deleted_by = 20;
-  string deletion_reason = 21;
 }

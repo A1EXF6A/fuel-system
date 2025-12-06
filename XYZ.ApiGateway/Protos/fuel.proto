@@ -33,8 +33,8 @@ message FuelPlanResponse {
 }
 
 message FuelReportRequest {
-  string filterType = 1;
-  string filterValue = 2;
+  string filterType = 1; // "vehicle" | "driver" | "route"
+  string filterValue = 2; // when filterType == "vehicle" this will be placa; for others numeric ids as string
 }
 
 message FuelReportResponse {

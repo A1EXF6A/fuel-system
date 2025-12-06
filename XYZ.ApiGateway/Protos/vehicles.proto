@@ -5,6 +5,7 @@ option csharp_namespace = "XYZ.VehiclesService.Protos";
 service Vehicles {
   rpc CreateVehicle (CreateVehicleRequest) returns (VehicleResponse);
   rpc GetVehicleByPlaca (GetVehicleByPlacaRequest) returns (VehicleResponse);
+  // SetAssignedDriver: driver_document empty => unassign
   rpc SetAssignedDriver (SetAssignedDriverRequest) returns (VehicleResponse);
   rpc GetVehicleById (GetVehicleRequest) returns (VehicleResponse);
   // Update and delete vehicle
@@ -23,6 +24,7 @@ message CreateVehicleRequest {
   int32 vehicleTypeId = 6;
   string estado = 7;
   double km = 8;
+  // Documento del chofer asignado (opcional)
   string assigned_driver_document = 9;
 }
 
@@ -74,6 +76,7 @@ message VehicleResponse {
   double consumoBase = 9;
   string estado = 10;
   double km = 11;
+  // Documento del chofer asignado al vehículo (si existe)
   string assigned_driver_document = 12;
 }
 
