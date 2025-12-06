@@ -24,9 +24,6 @@ services:
   driversservice:
     image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: driversservice
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=34.31.6.243;Port=5432;Database=xyz_driversdb;Username=postgres;Password=Postgres123$;
@@ -48,9 +45,6 @@ services:
   vehiclesservice:
     image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: vehiclesservice
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=34.31.6.243;Port=5432;Database=xyz_vehiclesdb;Username=postgres;Password=Postgres123$;
@@ -72,9 +66,6 @@ services:
   routesservice:
     image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: routesservice
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=34.31.6.243;Port=5432;Database=xyz_routesdb;Username=postgres;Password=Postgres123$;
@@ -96,9 +87,6 @@ services:
   fuelservice:
     image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: fuelservice
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=34.31.6.243;Port=5432;Database=xyz_fueldb;Username=postgres;Password=Postgres123$;
