@@ -73,7 +73,7 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateVehicle([FromBody] CreateVehicleRequest request)
+    public async Task<IActionResult> CreateVehicle([FromBody] CreateVehicleDto dto)
     {
         try
         {
@@ -82,6 +82,20 @@ public class VehiclesController : ControllerBase
             {
                 return Forbid();
             }
+
+            // Map DTO to gRPC request
+            var request = new CreateVehicleRequest
+            {
+                Placa = dto.Placa,
+                Chasis = dto.Chasis ?? string.Empty,
+                Marca = dto.Brand ?? string.Empty,
+                Modelo = dto.Model ?? string.Empty,
+                Anio = dto.Year,
+                VehicleTypeId = dto.VehicleTypeId ?? 1, // Default to 1 if not provided
+                Estado = dto.Estado ?? "Activo",
+                Km = dto.Km ?? 0,
+                AssignedDriverDocument = dto.AssignedDriverDocument ?? string.Empty
+            };
 
             var response = await _vehiclesService.CreateVehicleAsync(request);
             return Ok(response);
@@ -93,7 +107,7 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateVehicle(int id, [FromBody] UpdateVehicleRequest request)
+    public async Task<IActionResult> UpdateVehicle(int id, [FromBody] UpdateVehicleDto dto)
     {
         try
         {
@@ -103,8 +117,20 @@ public class VehiclesController : ControllerBase
                 return Forbid();
             }
 
-            // Ensure id consistency
-            request.Id = id;
+            // Map DTO to gRPC request
+            var request = new UpdateVehicleRequest
+            {
+                Id = id,
+                Placa = dto.Placa,
+                Chasis = dto.Chasis ?? string.Empty,
+                Marca = dto.Brand ?? string.Empty,
+                Modelo = dto.Model ?? string.Empty,
+                Anio = dto.Year,
+                VehicleTypeId = dto.VehicleTypeId ?? 1,
+                Estado = dto.Estado ?? "Activo",
+                Km = dto.Km ?? 0,
+                AssignedDriverDocument = dto.AssignedDriverDocument ?? string.Empty
+            };
 
             var response = await _vehiclesService.UpdateVehicleAsync(request);
             return Ok(response);
@@ -157,3 +183,34 @@ public class VehiclesController : ControllerBase
 }
 
 public record SetAssignedDriverDto(string? DriverDocument);
+
+public record CreateVehicleDto(
+    string Placa,
+    string? Chasis,
+    string? Brand,
+    string? Model,
+    int Year,
+    string? FuelType,
+    int? Capacity,
+    double? FuelTankCapacity,
+    int? VehicleTypeId,
+    string? Estado,
+    double? Km,
+    string? AssignedDriverDocument
+);
+
+public record UpdateVehicleDto(
+    int Id,
+    string Placa,
+    string? Chasis,
+    string? Brand,
+    string? Model,
+    int Year,
+    string? FuelType,
+    int? Capacity,
+    double? FuelTankCapacity,
+    int? VehicleTypeId,
+    string? Estado,
+    double? Km,
+    string? AssignedDriverDocument
+);
