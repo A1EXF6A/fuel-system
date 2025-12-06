@@ -4,7 +4,7 @@ services:
     image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: authservice
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=34.31.6.243;Port=5432;Database=xyz_authdb;Username=postgres;Password=Postgres123$;
       - ASPNETCORE_URLS=http://*:5000
     ports:
@@ -25,7 +25,7 @@ services:
     image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: driversservice
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=34.31.6.243;Port=5432;Database=xyz_driversdb;Username=postgres;Password=Postgres123$;
       - ASPNETCORE_URLS=http://*:5001
     ports:
@@ -46,7 +46,7 @@ services:
     image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: vehiclesservice
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=34.31.6.243;Port=5432;Database=xyz_vehiclesdb;Username=postgres;Password=Postgres123$;
       - ASPNETCORE_URLS=http://*:5002
     ports:
@@ -67,7 +67,7 @@ services:
     image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: routesservice
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=34.31.6.243;Port=5432;Database=xyz_routesdb;Username=postgres;Password=Postgres123$;
       - ASPNETCORE_URLS=http://*:5003
     ports:
@@ -88,7 +88,7 @@ services:
     image: mcr.microsoft.com/dotnet/sdk:9.0-alpine3.22
     container_name: fuelservice
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=34.31.6.243;Port=5432;Database=xyz_fueldb;Username=postgres;Password=Postgres123$;
       - ASPNETCORE_URLS=http://*:5004
     ports:
@@ -115,7 +115,7 @@ services:
       - routesservice
       - fuelservice
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://*:5010
     ports:
       - "5010:5010"

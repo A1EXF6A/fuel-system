@@ -477,6 +477,9 @@ appsettings.*.json
 **/*Steps*
 **/*STEPS*
 
+# Launch settings for development - interfere with production containers
+**/Properties/launchSettings.json
+
 # Certificate files
 *.p12
 *.p7b

@@ -38,12 +38,13 @@ public class VehiclesGatewayService
     {
         try
         {
-            var response = await _vehiclesClient.CreateVehicleAsync(request);
+            var metadata = BuildAuthMetadata();
+            var response = await _vehiclesClient.CreateVehicleAsync(request, metadata);
             return response;
         }
         catch (RpcException ex)
         {
-            _logger.LogError(ex, "Error creating vehicle");
+            _logger.LogError(ex, "Error creating vehicle with placa: {Placa}", request.Placa);
             throw;
         }
     }
