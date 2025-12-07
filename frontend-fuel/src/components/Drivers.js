@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 import {
   Box,
   Drawer,
@@ -43,8 +44,10 @@ import {
   Logout,
   Add,
   Edit,
-  Delete
+  Delete,
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
+import ThemeToggle from './ThemeToggle';
 
 const drawerWidth = 240;
 
@@ -91,7 +94,7 @@ const Drivers = () => {
 
   const fetchDrivers = async () => {
     try {
-      const response = await axios.get('http://localhost:5010/api/drivers');
+      const response = await axios.get(API_ENDPOINTS.DRIVERS.BASE);
       let drivers = [];
       if (Array.isArray(response.data)) {
         drivers = response.data;
@@ -142,7 +145,7 @@ const Drivers = () => {
 
   const handleSubmitEdit = async () => {
     try {
-      await axios.put(`http://localhost:5010/api/drivers/${editingDriver.id}`, formData);
+      await axios.put(`${API_ENDPOINTS.DRIVERS.BASE}/${editingDriver.id}`, formData);
       setAlert({ type: 'success', message: 'Chofer actualizado exitosamente' });
       setOpenEdit(false);
       fetchDrivers();
@@ -153,7 +156,7 @@ const Drivers = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5010/api/drivers/${deletingDriver.id}`, {
+      await axios.delete(`${API_ENDPOINTS.DRIVERS.BASE}/${deletingDriver.id}`, {
         data: deleteForm
       });
       setDrivers(drivers.filter(d => d.id !== deletingDriver.id));
@@ -181,6 +184,7 @@ const Drivers = () => {
   }
 
   const menuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
@@ -189,16 +193,17 @@ const Drivers = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Fuel System - Choferes
-          </Typography>
-          <IconButton color="inherit" onClick={logout}>
-            <Logout />
-          </IconButton>
-        </Toolbar>
+         <Toolbar>
+           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
+             Fuel System
+           </Typography>
+           <ThemeToggle />
+           <IconButton color="inherit" onClick={logout}>
+             <Logout />
+           </IconButton>
+         </Toolbar>
       </AppBar>
       <Drawer
         variant="permanent"
@@ -226,37 +231,46 @@ const Drivers = () => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h4">Choferes</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>Choferes</Typography>
+            <Typography variant="body2" color="text.secondary">Administración y seguimiento de choferes</Typography>
+          </Box>
         </Box>
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Filtrar por Documento"
-              value={documentFilter}
-              onChange={(e) => setDocumentFilter(e.target.value)}
-            />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <TextField
+                fullWidth
+                label="Filtrar por Documento"
+                value={documentFilter}
+                onChange={(e) => setDocumentFilter(e.target.value)}
+              />
+            </Paper>
           </Grid>
           <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Filtrar por Nombre"
-              value={nameFilter}
-              onChange={(e) => setNameFilter(e.target.value)}
-            />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <TextField
+                fullWidth
+                label="Filtrar por Nombre"
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+              />
+            </Paper>
           </Grid>
 
           <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Filtrar por Vehículo"
-              value={vehicleFilter}
-              onChange={(e) => setVehicleFilter(e.target.value)}
-            />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <TextField
+                fullWidth
+                label="Filtrar por Vehículo"
+                value={vehicleFilter}
+                onChange={(e) => setVehicleFilter(e.target.value)}
+              />
+            </Paper>
           </Grid>
         </Grid>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
           <Table>
              <TableHead>
                <TableRow>
@@ -310,8 +324,8 @@ const Drivers = () => {
 
 
       {/* Edit Dialog */}
-      <Dialog open={openEdit} onClose={() => setOpenEdit(false)}>
-        <DialogTitle>Editar Chofer</DialogTitle>
+      <Dialog open={openEdit} onClose={() => setOpenEdit(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 600 }}>Editar Chofer</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -406,14 +420,14 @@ const Drivers = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenEdit(false)}>Cancelar</Button>
-          <Button onClick={handleSubmitEdit}>Actualizar</Button>
+          <Button variant="outlined" onClick={() => setOpenEdit(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSubmitEdit}>Actualizar</Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Dialog */}
-      <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
-        <DialogTitle>Eliminar Chofer</DialogTitle>
+      <Dialog open={openDelete} onClose={() => setOpenDelete(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 600 }}>Eliminar Chofer</DialogTitle>
         <DialogContent>
           <Typography>¿Estás seguro de que quieres eliminar al chofer {deletingDriver?.firstName} {deletingDriver?.lastName}?</Typography>
           <TextField
@@ -433,8 +447,8 @@ const Drivers = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDelete(false)}>Cancelar</Button>
-          <Button onClick={handleConfirmDelete} color="error">Eliminar</Button>
+          <Button variant="outlined" onClick={() => setOpenDelete(false)}>Cancelar</Button>
+          <Button variant="contained" color="error" onClick={handleConfirmDelete}>Eliminar</Button>
         </DialogActions>
       </Dialog>
     </Box>

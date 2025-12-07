@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 import {
   Box,
   Drawer,
@@ -43,8 +44,10 @@ import {
   Logout,
   Add,
   Edit,
-  Delete
+  Delete,
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
+import ThemeToggle from './ThemeToggle';
 
 const drawerWidth = 240;
 
@@ -86,7 +89,7 @@ const Vehicles = () => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await axios.get('http://localhost:5010/api/vehicles');
+      const response = await axios.get(API_ENDPOINTS.VEHICLES.BASE);
       setVehicles(response.data.vehicles || []);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
@@ -96,7 +99,7 @@ const Vehicles = () => {
   const fetchDriverAndVehicles = async () => {
     try {
       // Fetch driver by username
-      const driverResponse = await axios.get('http://localhost:5010/api/drivers');
+      const driverResponse = await axios.get(API_ENDPOINTS.DRIVERS.BASE);
       let drivers = [];
       if (Array.isArray(driverResponse.data)) {
         drivers = driverResponse.data;
@@ -106,7 +109,7 @@ const Vehicles = () => {
       const driver = drivers.find(d => d.documentNumber === user.username);
       if (driver && driver.assignedVehiclePlaca) {
         // Fetch the specific vehicle
-        const vehicleResponse = await axios.get('http://localhost:5010/api/vehicles');
+        const vehicleResponse = await axios.get(API_ENDPOINTS.VEHICLES.BASE);
         const allVehicles = vehicleResponse.data.vehicles || [];
         const assignedVehicle = allVehicles.find(v => v.placa === driver.assignedVehiclePlaca);
         setVehicles(assignedVehicle ? [assignedVehicle] : []);
@@ -158,7 +161,18 @@ const Vehicles = () => {
 
   const handleSubmitCreate = async () => {
     try {
-      await axios.post('http://localhost:5010/api/vehicles', formData);
+      const payload = {
+        Placa: formData.placa,
+        Chasis: formData.chasis,
+        Brand: formData.marca,
+        Model: formData.modelo,
+        Year: formData.anio ? parseInt(formData.anio) : 0,
+        VehicleTypeId: formData.vehicleTypeId ? parseInt(formData.vehicleTypeId) : 1,
+        Estado: formData.estado,
+        Km: formData.km ? parseFloat(formData.km) : 0,
+        AssignedDriverDocument: formData.assignedDriverDocument
+      };
+      await axios.post(API_ENDPOINTS.VEHICLES.BASE, payload);
       setAlert({ type: 'success', message: 'Vehículo creado exitosamente' });
       setOpenCreate(false);
       fetchVehicles();
@@ -169,7 +183,19 @@ const Vehicles = () => {
 
   const handleSubmitEdit = async () => {
     try {
-      await axios.put(`http://localhost:5010/api/vehicles/${editingVehicle.id}`, formData);
+      const payload = {
+        Id: editingVehicle.id,
+        Placa: formData.placa,
+        Chasis: formData.chasis,
+        Brand: formData.marca,
+        Model: formData.modelo,
+        Year: formData.anio ? parseInt(formData.anio) : 0,
+        VehicleTypeId: formData.vehicleTypeId ? parseInt(formData.vehicleTypeId) : 1,
+        Estado: formData.estado,
+        Km: formData.km ? parseFloat(formData.km) : 0,
+        AssignedDriverDocument: formData.assignedDriverDocument
+      };
+      await axios.put(API_ENDPOINTS.VEHICLES.BY_ID(editingVehicle.id), payload);
       setAlert({ type: 'success', message: 'Vehículo actualizado exitosamente' });
       setOpenEdit(false);
       fetchVehicles();
@@ -180,7 +206,7 @@ const Vehicles = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5010/api/vehicles/${deletingVehicle.id}`);
+      await axios.delete(API_ENDPOINTS.VEHICLES.BY_ID(deletingVehicle.id));
       setAlert({ type: 'success', message: 'Vehículo eliminado exitosamente' });
       setOpenDelete(false);
       fetchVehicles();
@@ -199,11 +225,8 @@ const Vehicles = () => {
 
 
 
-   const menuItems = user.role === 'Operador' ? [
-     { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
-     { text: 'Ruta', icon: <Route />, path: '/routes' },
-     { text: 'Reporte', icon: <Assessment />, path: '/reports' }
-   ] : [
+   const menuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
@@ -212,16 +235,17 @@ const Vehicles = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Fuel System - {user.role === 'Operador' ? 'Mi Vehículo' : 'Vehículos'}
-          </Typography>
-          <IconButton color="inherit" onClick={logout}>
-            <Logout />
-          </IconButton>
-        </Toolbar>
+         <Toolbar>
+           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
+             Fuel System
+           </Typography>
+           <ThemeToggle />
+           <IconButton color="inherit" onClick={logout}>
+             <Logout />
+           </IconButton>
+         </Toolbar>
       </AppBar>
       <Drawer
         variant="permanent"
@@ -249,8 +273,11 @@ const Vehicles = () => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h4">Vehículos</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>{user.role === 'Operador' ? 'Mi Vehículo' : 'Vehículos'}</Typography>
+            <Typography variant="body2" color="text.secondary">Listado y gestión de vehículos</Typography>
+          </Box>
            {user && user.role === 'Admin' && (
              <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
                Nuevo Vehículo
@@ -259,39 +286,47 @@ const Vehicles = () => {
         </Box>
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={3}>
-            <TextField
-              fullWidth
-              label="Filtrar por Placa"
-              value={placaFilter}
-              onChange={(e) => setPlacaFilter(e.target.value)}
-            />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <TextField
+                fullWidth
+                label="Filtrar por Placa"
+                value={placaFilter}
+                onChange={(e) => setPlacaFilter(e.target.value)}
+              />
+            </Paper>
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField
-              fullWidth
-              label="Filtrar por Marca"
-              value={marcaFilter}
-              onChange={(e) => setMarcaFilter(e.target.value)}
-            />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <TextField
+                fullWidth
+                label="Filtrar por Marca"
+                value={marcaFilter}
+                onChange={(e) => setMarcaFilter(e.target.value)}
+              />
+            </Paper>
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField
-              fullWidth
-              label="Filtrar por Modelo"
-              value={modeloFilter}
-              onChange={(e) => setModeloFilter(e.target.value)}
-            />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <TextField
+                fullWidth
+                label="Filtrar por Modelo"
+                value={modeloFilter}
+                onChange={(e) => setModeloFilter(e.target.value)}
+              />
+            </Paper>
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField
-              fullWidth
-              label="Filtrar por Estado"
-              value={estadoFilter}
-              onChange={(e) => setEstadoFilter(e.target.value)}
-            />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <TextField
+                fullWidth
+                label="Filtrar por Estado"
+                value={estadoFilter}
+                onChange={(e) => setEstadoFilter(e.target.value)}
+              />
+            </Paper>
           </Grid>
         </Grid>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
           <Table>
              <TableHead>
                <TableRow>
@@ -343,8 +378,8 @@ const Vehicles = () => {
       )}
 
       {/* Create Dialog */}
-      <Dialog open={openCreate} onClose={() => setOpenCreate(false)}>
-        <DialogTitle>Crear Nuevo Vehículo</DialogTitle>
+      <Dialog open={openCreate} onClose={() => setOpenCreate(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 600 }}>Crear Nuevo Vehículo</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -411,14 +446,14 @@ const Vehicles = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenCreate(false)}>Cancelar</Button>
-          <Button onClick={handleSubmitCreate}>Crear</Button>
+          <Button variant="outlined" onClick={() => setOpenCreate(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSubmitCreate}>Crear</Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={openEdit} onClose={() => setOpenEdit(false)}>
-        <DialogTitle>Editar Vehículo</DialogTitle>
+      <Dialog open={openEdit} onClose={() => setOpenEdit(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 600 }}>Editar Vehículo</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -486,20 +521,20 @@ const Vehicles = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenEdit(false)}>Cancelar</Button>
-          <Button onClick={handleSubmitEdit}>Actualizar</Button>
+          <Button variant="outlined" onClick={() => setOpenEdit(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSubmitEdit}>Actualizar</Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Dialog */}
-      <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
-        <DialogTitle>Eliminar Vehículo</DialogTitle>
+      <Dialog open={openDelete} onClose={() => setOpenDelete(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 600 }}>Eliminar Vehículo</DialogTitle>
         <DialogContent>
           <Typography>¿Estás seguro de que quieres eliminar el vehículo con placa {deletingVehicle?.placa}?</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDelete(false)}>Cancelar</Button>
-          <Button onClick={handleConfirmDelete} color="error">Eliminar</Button>
+          <Button variant="outlined" onClick={() => setOpenDelete(false)}>Cancelar</Button>
+          <Button variant="contained" color="error" onClick={handleConfirmDelete}>Eliminar</Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -1,5 +1,3 @@
-using Grpc.Reflection;
-using Grpc.Reflection.V1Alpha;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -46,18 +44,13 @@ builder.Services.AddHttpClient();
 // Configure Kestrel for HTTP/2 (required for gRPC)
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ConfigureEndpointDefaults(lo =>
-        lo.Protocols = HttpProtocols.Http2
-    );
+    options.ConfigureEndpointDefaults(lo => lo.Protocols = HttpProtocols.Http2);
 });
 
 var app = builder.Build();
 
 app.MapGrpcService<XYZ.RoutesService.Controllers.RoutesGrpcService>();
-if (builder.Environment.IsDevelopment())
-{
-    app.MapGrpcReflectionService();
-}
+app.MapGrpcReflectionService();
 
 using (var scope = app.Services.CreateScope())
 {

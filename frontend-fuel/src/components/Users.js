@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 import {
   Box,
   Drawer,
@@ -43,8 +44,10 @@ import {
   Logout,
   Add,
   Edit,
-  Delete
+  Delete,
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
+import ThemeToggle from './ThemeToggle';
 
 const drawerWidth = 240;
 
@@ -86,7 +89,7 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:5010/api/auth/users');
+      const response = await axios.get(API_ENDPOINTS.AUTH.USERS);
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -133,7 +136,7 @@ const Users = () => {
      });
     if (user.role === 'Operador') {
       try {
-        const response = await axios.get(`http://localhost:5010/api/drivers`);
+         const response = await axios.get(API_ENDPOINTS.DRIVERS.BASE);
         const drivers = response.data.Drivers || response.data;
         const driver = Array.isArray(drivers) ? drivers.find(d => d.documentNumber === user.username) : null;
         if (driver) {
@@ -161,7 +164,7 @@ const Users = () => {
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
-        await axios.delete(`http://localhost:5010/api/auth/users/${id}`);
+         await axios.delete(`${API_ENDPOINTS.AUTH.USERS}/${id}`);
         fetchUsers();
       } catch (error) {
         console.error('Error deleting user:', error);
@@ -189,13 +192,13 @@ const Users = () => {
     try {
       let userResponse;
       if (editingUser) {
-        userResponse = await axios.put(`http://localhost:5010/api/auth/users/${editingUser.id}`, {
+         userResponse = await axios.put(`${API_ENDPOINTS.AUTH.USERS}/${editingUser.id}`, {
           username: formData.username,
           password: formData.password || undefined,
           role: formData.role
         });
       } else {
-        userResponse = await axios.post('http://localhost:5010/api/auth/register', {
+         userResponse = await axios.post(API_ENDPOINTS.AUTH.REGISTER, {
           username: formData.username,
           password: formData.password,
           role: formData.role
@@ -218,9 +221,9 @@ const Users = () => {
         };
 
         if (editingUser && driverData) {
-          await axios.put(`http://localhost:5010/api/drivers/${driverData.id}`, driverPayload);
+           await axios.put(`${API_ENDPOINTS.DRIVERS.BASE}/${driverData.id}`, driverPayload);
         } else {
-          await axios.post('http://localhost:5010/api/drivers', driverPayload);
+           await axios.post(API_ENDPOINTS.DRIVERS.BASE, driverPayload);
         }
       }
 
@@ -244,6 +247,7 @@ const Users = () => {
    }
 
   const menuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
@@ -252,16 +256,17 @@ const Users = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Fuel System - Usuarios
-          </Typography>
-          <IconButton color="inherit" onClick={logout}>
-            <Logout />
-          </IconButton>
-        </Toolbar>
+         <Toolbar>
+           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
+             Fuel System
+           </Typography>
+           <ThemeToggle />
+           <IconButton color="inherit" onClick={logout}>
+             <Logout />
+           </IconButton>
+         </Toolbar>
       </AppBar>
       <Drawer
         variant="permanent"
@@ -289,8 +294,11 @@ const Users = () => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-           <Typography variant="h4">Usuarios</Typography>
+         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+           <Box>
+             <Typography variant="h5" sx={{ fontWeight: 600 }}>Usuarios</Typography>
+             <Typography variant="body2" color="text.secondary">Gestión de usuarios del sistema</Typography>
+           </Box>
            {user.role === 'Admin' && (
              <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
                Nuevo Usuario
@@ -299,23 +307,27 @@ const Users = () => {
          </Box>
         <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Filtrar por Username"
-              value={usernameFilter}
-              onChange={(e) => setUsernameFilter(e.target.value)}
-            />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <TextField
+                fullWidth
+                label="Filtrar por Username"
+                value={usernameFilter}
+                onChange={(e) => setUsernameFilter(e.target.value)}
+              />
+            </Paper>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Filtrar por Role"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-            />
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <TextField
+                fullWidth
+                label="Filtrar por Role"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+              />
+            </Paper>
           </Grid>
         </Grid>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
           <Table>
              <TableHead>
                <TableRow>
@@ -352,8 +364,8 @@ const Users = () => {
           </Table>
         </TableContainer>
 
-        <Dialog open={open} onClose={() => setOpen(false)}>
-          <DialogTitle>{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</DialogTitle>
+        <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+          <DialogTitle sx={{ fontWeight: 600 }}>{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</DialogTitle>
           <DialogContent>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <TextField
@@ -476,8 +488,8 @@ const Users = () => {
              )}
            </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={handleSubmit}>Save</Button>
+            <Button variant="outlined" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button variant="contained" onClick={handleSubmit}>Guardar</Button>
           </DialogActions>
         </Dialog>
       </Box>

@@ -1,8 +1,4 @@
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
 using XYZ.FuelService.Application.Interfaces;
 using XYZ.FuelService.Application.Services;
@@ -44,11 +40,8 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
-// Enable reflection endpoint in Development
-if (app.Environment.IsDevelopment())
-{
-    app.MapGrpcReflectionService();
-}
+// Enable reflection endpoint
+app.MapGrpcReflectionService();
 
 app.MapGrpcService<XYZ.FuelService.Controllers.FuelGrpcService>();
 

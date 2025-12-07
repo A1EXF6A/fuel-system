@@ -5,8 +5,12 @@ option csharp_namespace = "XYZ.VehiclesService.Protos";
 service Vehicles {
   rpc CreateVehicle (CreateVehicleRequest) returns (VehicleResponse);
   rpc GetVehicleByPlaca (GetVehicleByPlacaRequest) returns (VehicleResponse);
+  // SetAssignedDriver: driver_document empty => unassign
   rpc SetAssignedDriver (SetAssignedDriverRequest) returns (VehicleResponse);
   rpc GetVehicleById (GetVehicleRequest) returns (VehicleResponse);
+  // Update and delete vehicle
+  rpc UpdateVehicle (UpdateVehicleRequest) returns (VehicleResponse);
+  rpc DeleteVehicle (DeleteVehicleRequest) returns (DeleteVehicleResponse);
   rpc GetAllVehicles (EmptyRequest) returns (VehiclesListResponse);
   rpc GetVehicleTypes (EmptyRequest) returns (VehicleTypesListResponse);
 }
@@ -20,6 +24,7 @@ message CreateVehicleRequest {
   int32 vehicleTypeId = 6;
   string estado = 7;
   double km = 8;
+  // Documento del chofer asignado (opcional)
   string assigned_driver_document = 9;
 }
 
@@ -27,7 +32,37 @@ message GetVehicleRequest {
   int32 id = 1;
 }
 
+message GetVehicleByPlacaRequest {
+  string placa = 1;
+}
+
+message SetAssignedDriverRequest {
+  string placa = 1;
+  string driver_document = 2;
+}
+
 message EmptyRequest {}
+
+message UpdateVehicleRequest {
+  int32 id = 1;
+  string placa = 2;
+  string chasis = 3;
+  string marca = 4;
+  string modelo = 5;
+  int32 anio = 6;
+  int32 vehicleTypeId = 7;
+  string estado = 8;
+  double km = 9;
+  string assigned_driver_document = 10;
+}
+
+message DeleteVehicleRequest {
+  int32 id = 1;
+}
+
+message DeleteVehicleResponse {
+  bool success = 1;
+}
 
 message VehicleResponse {
   int32 id = 1;
@@ -41,6 +76,7 @@ message VehicleResponse {
   double consumoBase = 9;
   string estado = 10;
   double km = 11;
+  // Documento del chofer asignado al vehículo (si existe)
   string assigned_driver_document = 12;
 }
 
@@ -62,13 +98,4 @@ message VehicleTypeResponse {
 
 message VehicleTypesListResponse {
   repeated VehicleTypeResponse types = 1;
-}
-
-message GetVehicleByPlacaRequest {
-  string placa = 1;
-}
-
-message SetAssignedDriverRequest {
-  string placa = 1;
-  string driver_document = 2;
 }

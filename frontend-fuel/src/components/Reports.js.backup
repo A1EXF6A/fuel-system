@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
-import { API_ENDPOINTS } from '../config/api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
@@ -51,8 +50,7 @@ import {
   Edit,
   CheckCircle,
   Download,
-  BarChart,
-  Dashboard as DashboardIcon
+  BarChart
 } from '@mui/icons-material';
 import ThemeToggle from './ThemeToggle';
 
@@ -101,7 +99,7 @@ const Reports = () => {
 
    const fetchDriver = async () => {
     try {
-      const response = await axios.get(API_ENDPOINTS.DRIVERS.BASE);
+      const response = await axios.get('http://localhost:5010/api/drivers');
       let drivers = [];
       if (Array.isArray(response.data)) {
         drivers = response.data;
@@ -119,12 +117,12 @@ const Reports = () => {
 
   const fetchReports = async () => {
     try {
-      const response = await axios.get(API_ENDPOINTS.FUEL.REPORTS);
+      const response = await axios.get('http://localhost:5010/api/fuel/reports');
       let reportsData = response.data.registros || [];
       // Fetch route names for each report
       const reportsWithNames = await Promise.all(reportsData.map(async (report) => {
         try {
-          const routeResponse = await axios.get(API_ENDPOINTS.ROUTES.BY_ID(report.routeId));
+          const routeResponse = await axios.get(`http://localhost:5010/api/routes/${report.routeId}`);
           const routeName = routeResponse.data.nombre || 'N/A';
           return { ...report, routeName };
         } catch (error) {
@@ -146,7 +144,7 @@ const Reports = () => {
 
   const handleSubmitUpdateLiters = async () => {
     try {
-      await axios.post(API_ENDPOINTS.FUEL.REGISTER, {
+      await axios.post('http://localhost:5010/api/fuel/register/', {
         planId: selectedReport.id,
         actualLiters: parseFloat(newActualLiters)
       });
@@ -172,7 +170,7 @@ const Reports = () => {
 
   const handleSubmitUpdateStatus = async () => {
     try {
-      await axios.post(API_ENDPOINTS.FUEL.REPORT_STATUS(selectedReport.id), {
+      await axios.post(`http://localhost:5010/api/fuel/reports/${selectedReport.id}/status/`, {
         estado: newEstado
       });
       setOpenUpdateStatusDialog(false);
@@ -186,11 +184,11 @@ const Reports = () => {
     setLoadingStats(true);
     try {
       const [usersRes, driversRes, vehiclesRes, routesRes, fuelReportsRes] = await Promise.all([
-        axios.get(API_ENDPOINTS.AUTH.USERS),
-        axios.get(API_ENDPOINTS.DRIVERS.BASE),
-        axios.get(API_ENDPOINTS.VEHICLES.BASE),
-        axios.get(API_ENDPOINTS.ROUTES.BASE),
-        axios.get(API_ENDPOINTS.FUEL.REPORTS)
+        axios.get('http://localhost:5010/api/auth/users'),
+        axios.get('http://localhost:5010/api/drivers'),
+        axios.get('http://localhost:5010/api/vehicles'),
+        axios.get('http://localhost:5010/api/routes'),
+        axios.get('http://localhost:5010/api/fuel/reports')
       ]);
 
       const users = usersRes.data.length || 0;
@@ -202,7 +200,7 @@ const Reports = () => {
       // Fetch route names for fuel reports
       const fuelReportsWithNames = await Promise.all(fuelReportsData.map(async (report) => {
         try {
-          const routeResponse = await axios.get(API_ENDPOINTS.ROUTES.BY_ID(report.routeId));
+          const routeResponse = await axios.get(`http://localhost:5010/api/routes/${report.routeId}`);
           const routeName = routeResponse.data.nombre || 'N/A';
           return { ...report, routeName };
         } catch (error) {
@@ -411,8 +409,11 @@ const Reports = () => {
 
 
 
-   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+   const menuItems = user.role === 'Operador' ? [
+     { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
+     { text: 'Ruta', icon: <Route />, path: '/routes' },
+     { text: 'Reporte', icon: <Assessment />, path: '/reports' }
+   ] : [
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
@@ -421,11 +422,11 @@ const Reports = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ display: 'flex' }}>
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
          <Toolbar>
-            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
-              Fuel System
+            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+              Fuel System - {user.role === 'Operador' ? 'Reportes' : 'Reportes'}
             </Typography>
            <ThemeToggle />
            <IconButton color="inherit" onClick={logout}>
@@ -461,41 +462,35 @@ const Reports = () => {
         <Toolbar />
         {user.role === 'Admin' ? (
           <>
-            <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
+            <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 2 }}>
               <Tab label="Reportes" value="reportes" />
               <Tab label="Comparación" value="comparacion" />
               <Tab label="Estadísticas" value="estadisticas" />
             </Tabs>
             {activeTab === 'reportes' && (
               <>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                    Reportes de Combustible
-                  </Typography>
-                </Box>
+                <Typography variant="h4" gutterBottom>
+                  Reportes de Combustible
+                </Typography>
                 <Grid container spacing={2} sx={{ mb: 2 }}>
                   <Grid item xs={12} sm={6}>
-                    <Paper variant="outlined" sx={{ p: 2 }}>
-                      <TextField
-                        fullWidth
-                        label="Filtrar por Vehículo (Placa)"
-                        value={vehiclePlacaFilter}
-                        onChange={(e) => setVehiclePlacaFilter(e.target.value)}
-                      />
-                    </Paper>
+                    <TextField
+                      fullWidth
+                      label="Filtrar por Vehículo (Placa)"
+                      value={vehiclePlacaFilter}
+                      onChange={(e) => setVehiclePlacaFilter(e.target.value)}
+                    />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <Paper variant="outlined" sx={{ p: 2 }}>
-                      <TextField
-                        fullWidth
-                        label="Filtrar por Estado"
-                        value={estadoFilter}
-                        onChange={(e) => setEstadoFilter(e.target.value)}
-                      />
-                    </Paper>
+                    <TextField
+                      fullWidth
+                      label="Filtrar por Estado"
+                      value={estadoFilter}
+                      onChange={(e) => setEstadoFilter(e.target.value)}
+                    />
                   </Grid>
                 </Grid>
-                <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
+                <TableContainer component={Paper}>
                   <Table>
                      <TableHead>
                        <TableRow>
@@ -606,32 +601,28 @@ const Reports = () => {
         )}
         {activeTab === 'comparacion' && (
           <>
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+            <Typography variant="h4" gutterBottom>
               Comparación de Consumo Estimado vs Real
             </Typography>
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} sm={6}>
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <TextField
-                    fullWidth
-                    label="Filtrar por Vehículo (Placa)"
-                    value={vehiclePlacaFilter}
-                    onChange={(e) => setVehiclePlacaFilter(e.target.value)}
-                  />
-                </Paper>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Vehículo (Placa)"
+                  value={vehiclePlacaFilter}
+                  onChange={(e) => setVehiclePlacaFilter(e.target.value)}
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <TextField
-                    fullWidth
-                    label="Filtrar por Estado"
-                    value={estadoFilter}
-                    onChange={(e) => setEstadoFilter(e.target.value)}
-                  />
-                </Paper>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Estado"
+                  value={estadoFilter}
+                  onChange={(e) => setEstadoFilter(e.target.value)}
+                />
               </Grid>
             </Grid>
-            <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
+            <TableContainer component={Paper}>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -674,7 +665,7 @@ const Reports = () => {
         {activeTab === 'estadisticas' && (
           <>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h5" gutterBottom sx={{ mb: 0, fontWeight: 600 }}>
+              <Typography variant="h4" gutterBottom sx={{ mb: 0 }}>
                 Estadísticas del Sistema
               </Typography>
               <Button
@@ -698,7 +689,7 @@ const Reports = () => {
                 <Grid item xs={12} sm={6} md={4}>
                   <Card sx={{ height: '100%' }}>
                     <CardContent sx={{ textAlign: 'center' }}>
-                      <People sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+                      <People sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
                       <Typography variant="h4" color="primary">
                         {systemStats.users}
                       </Typography>
@@ -711,7 +702,7 @@ const Reports = () => {
                 <Grid item xs={12} sm={6} md={4}>
                   <Card sx={{ height: '100%' }}>
                     <CardContent sx={{ textAlign: 'center' }}>
-                      <DriveEta sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+                      <DriveEta sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
                       <Typography variant="h4" color="primary">
                         {systemStats.drivers}
                       </Typography>
@@ -724,7 +715,7 @@ const Reports = () => {
                 <Grid item xs={12} sm={6} md={4}>
                   <Card sx={{ height: '100%' }}>
                     <CardContent sx={{ textAlign: 'center' }}>
-                      <LocalShipping sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+                      <LocalShipping sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
                       <Typography variant="h4" color="primary">
                         {systemStats.vehicles}
                       </Typography>
@@ -737,7 +728,7 @@ const Reports = () => {
                 <Grid item xs={12} sm={6} md={4}>
                   <Card sx={{ height: '100%' }}>
                     <CardContent sx={{ textAlign: 'center' }}>
-                      <Route sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+                      <Route sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
                       <Typography variant="h4" color="primary">
                         {systemStats.routes}
                       </Typography>
@@ -750,7 +741,7 @@ const Reports = () => {
                 <Grid item xs={12} sm={6} md={4}>
                   <Card sx={{ height: '100%' }}>
                     <CardContent sx={{ textAlign: 'center' }}>
-                      <Assessment sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+                      <Assessment sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
                       <Typography variant="h4" color="primary">
                         {systemStats.fuelReports}
                       </Typography>
@@ -763,7 +754,7 @@ const Reports = () => {
                 <Grid item xs={12} sm={6} md={4}>
                   <Card sx={{ height: '100%' }}>
                     <CardContent sx={{ textAlign: 'center' }}>
-                      <BarChart sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+                      <BarChart sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
                       <Typography variant="h4" color="primary">
                         {systemStats.totalFuelConsumption} L
                       </Typography>

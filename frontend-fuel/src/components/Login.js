@@ -30,18 +30,21 @@ const Login = () => {
 
   return (
     <Container component="main" maxWidth="sm">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
-            Fuel System Login
-          </Typography>
+      <Box sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Paper elevation={0} sx={{ p: 5, width: '100%', border: (theme) => `1px solid ${theme.palette.divider}`, borderRadius: 3 }}>
+          <Box sx={{ mb: 3, textAlign: 'center' }}>
+            <Typography component="h1" variant="h4" sx={{ fontWeight: 700 }}>
+              Fuel System
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Inicia sesión para continuar
+            </Typography>
+          </Box>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             <TextField
@@ -49,7 +52,7 @@ const Login = () => {
               required
               fullWidth
               id="username"
-              label="Username"
+              label="Usuario"
               name="username"
               autoComplete="username"
               autoFocus
@@ -61,20 +64,15 @@ const Login = () => {
               required
               fullWidth
               name="password"
-              label="Password"
+              label="Contraseña"
               type="password"
               id="password"
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Sign In
+            <Button type="submit" fullWidth variant="contained" sx={{ mt: 3 }}>
+              Entrar
             </Button>
           </Box>
         </Paper>

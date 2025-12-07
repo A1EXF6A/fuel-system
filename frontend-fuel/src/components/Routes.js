@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 import {
   Box,
   Drawer,
@@ -46,8 +47,10 @@ import {
   Edit,
   Delete,
   Update,
-   LocalGasStation
+    LocalGasStation,
+    Dashboard as DashboardIcon
 } from '@mui/icons-material';
+import ThemeToggle from './ThemeToggle';
 
 const drawerWidth = 240;
 
@@ -100,7 +103,7 @@ const RoutesComponent = () => {
 
   const fetchRoutes = async () => {
     try {
-      const response = await axios.get('http://localhost:5010/api/routes');
+      const response = await axios.get(API_ENDPOINTS.ROUTES.BASE);
       setRoutes(response.data.routes || response.data.Routes || []);
     } catch (error) {
       console.error('Error fetching routes:', error);
@@ -109,7 +112,7 @@ const RoutesComponent = () => {
 
   const fetchDrivers = async () => {
     try {
-      const response = await axios.get('http://localhost:5010/api/drivers');
+      const response = await axios.get(API_ENDPOINTS.DRIVERS.BASE);
       let drivers = [];
       if (Array.isArray(response.data)) {
         drivers = response.data;
@@ -126,7 +129,7 @@ const RoutesComponent = () => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await axios.get('http://localhost:5010/api/vehicles');
+      const response = await axios.get(API_ENDPOINTS.VEHICLES.BASE);
       setVehicles(response.data.vehicles || []);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
@@ -135,7 +138,7 @@ const RoutesComponent = () => {
   const fetchDriverAndRoute = async () => {
      try {
        // Fetch driver by username
-       const driverResponse = await axios.get('http://localhost:5010/api/drivers');
+       const driverResponse = await axios.get(API_ENDPOINTS.DRIVERS.BASE);
        let drivers = [];
        if (Array.isArray(driverResponse.data)) {
          drivers = driverResponse.data;
@@ -146,7 +149,7 @@ const RoutesComponent = () => {
        if (driver && driver.assignedVehiclePlaca) {
          setAssignedPlaca(driver.assignedVehiclePlaca);
          // Fetch routes and find the one assigned to the vehicle
-         const routeResponse = await axios.get('http://localhost:5010/api/routes');
+         const routeResponse = await axios.get(API_ENDPOINTS.ROUTES.BASE);
          const allRoutes = routeResponse.data.routes || routeResponse.data.Routes || [];
          const assignedRoute = allRoutes.find(r => r.vehiclePlaca === driver.assignedVehiclePlaca);
          setRoutes(assignedRoute ? [assignedRoute] : []);
@@ -172,7 +175,7 @@ const RoutesComponent = () => {
 
   const handleUnassign = async (driver) => {
     try {
-      await axios.post(`http://localhost:5010/api/drivers/${driver.id}/unassign`);
+      await axios.post(API_ENDPOINTS.DRIVERS.UNASSIGN(driver.id));
       fetchDrivers();
       fetchVehicles();
     } catch (error) {
@@ -182,7 +185,7 @@ const RoutesComponent = () => {
 
   const handleAssignSubmit = async () => {
     try {
-      await axios.post(`http://localhost:5010/api/drivers/${selectedDriver.id}/assign`, {
+      await axios.post(API_ENDPOINTS.DRIVERS.ASSIGN(selectedDriver.id), {
         VehiclePlaca: selectedPlaca
       });
       setOpenAssignDialog(false);
@@ -227,9 +230,9 @@ const RoutesComponent = () => {
   const handleSubmitRoute = async () => {
     try {
       if (editingRoute) {
-        await axios.put(`http://localhost:5010/api/routes/${editingRoute.id}`, routeForm);
+        await axios.put(API_ENDPOINTS.ROUTES.BY_ID(editingRoute.id), routeForm);
       } else {
-        await axios.post('http://localhost:5010/api/routes', routeForm);
+        await axios.post(API_ENDPOINTS.ROUTES.BASE, routeForm);
       }
       setOpenCreateRouteDialog(false);
       setOpenEditRouteDialog(false);
@@ -241,7 +244,7 @@ const RoutesComponent = () => {
 
   const handleSubmitStatus = async () => {
      try {
-       await axios.post(`http://localhost:5010/api/routes/${editingRoute.id}/status`, { Estado: statusForm.estado });
+        await axios.post(API_ENDPOINTS.ROUTES.STATUS(editingRoute.id), { Estado: statusForm.estado });
        setOpenUpdateStatusDialog(false);
        if (user.role === 'Operador') {
          fetchDriverAndRoute();
@@ -255,7 +258,7 @@ const RoutesComponent = () => {
 
   const handleAddFuel = async (route) => {
     try {
-      const response = await axios.post('http://localhost:5010/api/fuel/plan', {
+      const response = await axios.post(API_ENDPOINTS.FUEL.PLAN, {
         vehiclePlaca: "",
         driverId: 0,
         routeId: route.id
@@ -270,7 +273,7 @@ const RoutesComponent = () => {
 
   const handleSubmitFuel = async () => {
     try {
-      await axios.post('http://localhost:5010/api/fuel/register', {
+      await axios.post(API_ENDPOINTS.FUEL.REGISTER, {
         planId: fuelPlan.id,
         actualLiters: parseFloat(actualLiters)
       });
@@ -288,11 +291,8 @@ const RoutesComponent = () => {
 
 
 
-   const menuItems = user.role === 'Operador' ? [
-     { text: 'Vehículo', icon: <LocalShipping />, path: '/vehicles' },
-     { text: 'Ruta', icon: <Route />, path: '/routes' },
-     { text: 'Reporte', icon: <Assessment />, path: '/reports' }
-   ] : [
+   const menuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
     { text: 'Usuarios', icon: <People />, path: '/users' },
     { text: 'Choferes', icon: <DriveEta />, path: '/drivers' },
     { text: 'Vehículos', icon: <LocalShipping />, path: '/vehicles' },
@@ -301,16 +301,17 @@ const RoutesComponent = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Fuel System - {user.role === 'Operador' ? 'Mi Ruta' : 'Rutas'}
-          </Typography>
-          <IconButton color="inherit" onClick={logout}>
-            <Logout />
-          </IconButton>
-        </Toolbar>
+         <Toolbar>
+           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
+             Fuel System
+           </Typography>
+           <ThemeToggle />
+           <IconButton color="inherit" onClick={logout}>
+             <Logout />
+           </IconButton>
+         </Toolbar>
       </AppBar>
       <Drawer
         variant="permanent"
@@ -340,54 +341,65 @@ const RoutesComponent = () => {
         <Toolbar />
         {user.role === 'Admin' ? (
           <>
-            <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 2 }}>
+            <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
               <Tab label="Asignar" value="asignar" />
               <Tab label="Desasignar" value="desasignar" />
               <Tab label="Rutas" value="rutas" />
             </Tabs>
             {activeTab === 'rutas' && (
               <>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography variant="h4">Rutas</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Box>
+                    <Typography variant="h5" sx={{ fontWeight: 600 }}>Rutas</Typography>
+                    <Typography variant="body2" color="text.secondary">Gestión y estado de rutas</Typography>
+                  </Box>
                   <Button variant="contained" startIcon={<Add />} onClick={handleCreateRoute}>
                     Nueva Ruta
                   </Button>
                 </Box>
                 <Grid container spacing={2} sx={{ mb: 2 }}>
                   <Grid item xs={12} sm={3}>
-                    <TextField
-                      fullWidth
-                      label="Filtrar por Nombre"
-                      value={nombreFilter}
-                      onChange={(e) => setNombreFilter(e.target.value)}
-                    />
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                      <TextField
+                        fullWidth
+                        label="Filtrar por Nombre"
+                        value={nombreFilter}
+                        onChange={(e) => setNombreFilter(e.target.value)}
+                      />
+                    </Paper>
                   </Grid>
                   <Grid item xs={12} sm={3}>
-                    <TextField
-                      fullWidth
-                      label="Filtrar por Origen"
-                      value={origenFilter}
-                      onChange={(e) => setOrigenFilter(e.target.value)}
-                    />
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                      <TextField
+                        fullWidth
+                        label="Filtrar por Origen"
+                        value={origenFilter}
+                        onChange={(e) => setOrigenFilter(e.target.value)}
+                      />
+                    </Paper>
                   </Grid>
                   <Grid item xs={12} sm={3}>
-                    <TextField
-                      fullWidth
-                      label="Filtrar por Destino"
-                      value={destinoFilter}
-                      onChange={(e) => setDestinoFilter(e.target.value)}
-                    />
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                      <TextField
+                        fullWidth
+                        label="Filtrar por Destino"
+                        value={destinoFilter}
+                        onChange={(e) => setDestinoFilter(e.target.value)}
+                      />
+                    </Paper>
                   </Grid>
                   <Grid item xs={12} sm={3}>
-                    <TextField
-                      fullWidth
-                      label="Filtrar por Estado"
-                      value={estadoFilter}
-                      onChange={(e) => setEstadoFilter(e.target.value)}
-                    />
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                      <TextField
+                        fullWidth
+                        label="Filtrar por Estado"
+                        value={estadoFilter}
+                        onChange={(e) => setEstadoFilter(e.target.value)}
+                      />
+                    </Paper>
                   </Grid>
                 </Grid>
-                <TableContainer component={Paper}>
+                <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
                   <Table>
                     <TableHead>
                       <TableRow>
@@ -433,8 +445,8 @@ const RoutesComponent = () => {
             )}
             {activeTab === 'asignar' && (
               <>
-                <Typography variant="h4" sx={{ mb: 2 }}>Asignar Vehículos a Choferes</Typography>
-                <TableContainer component={Paper}>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>Asignar Vehículos a Choferes</Typography>
+                <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
                   <Table>
                     <TableHead>
                       <TableRow>
@@ -466,8 +478,8 @@ const RoutesComponent = () => {
             )}
             {activeTab === 'desasignar' && (
               <>
-                <Typography variant="h4" sx={{ mb: 2 }}>Desasignar Vehículos de Choferes</Typography>
-                <TableContainer component={Paper}>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>Desasignar Vehículos de Choferes</Typography>
+                <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
                   <Table>
                     <TableHead>
                       <TableRow>
@@ -500,42 +512,55 @@ const RoutesComponent = () => {
           </>
         ) : (
           <>
-            <Typography variant="h4" sx={{ mb: 2 }}>{user.role === 'Operador' ? 'Mi Ruta' : 'Rutas'}</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box>
+                <Typography variant="h5" sx={{ mb: 0.5, fontWeight: 600 }}>{user.role === 'Operador' ? 'Mi Ruta' : 'Rutas'}</Typography>
+                <Typography variant="body2" color="text.secondary">Listado y estado de rutas</Typography>
+              </Box>
+            </Box>
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} sm={3}>
-                <TextField
-                  fullWidth
-                  label="Filtrar por Nombre"
-                  value={nombreFilter}
-                  onChange={(e) => setNombreFilter(e.target.value)}
-                />
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Filtrar por Nombre"
+                    value={nombreFilter}
+                    onChange={(e) => setNombreFilter(e.target.value)}
+                  />
+                </Paper>
               </Grid>
               <Grid item xs={12} sm={3}>
-                <TextField
-                  fullWidth
-                  label="Filtrar por Origen"
-                  value={origenFilter}
-                  onChange={(e) => setOrigenFilter(e.target.value)}
-                />
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Filtrar por Origen"
+                    value={origenFilter}
+                    onChange={(e) => setOrigenFilter(e.target.value)}
+                  />
+                </Paper>
               </Grid>
               <Grid item xs={12} sm={3}>
-                <TextField
-                  fullWidth
-                  label="Filtrar por Destino"
-                  value={destinoFilter}
-                  onChange={(e) => setDestinoFilter(e.target.value)}
-                />
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Filtrar por Destino"
+                    value={destinoFilter}
+                    onChange={(e) => setDestinoFilter(e.target.value)}
+                  />
+                </Paper>
               </Grid>
               <Grid item xs={12} sm={3}>
-                <TextField
-                  fullWidth
-                  label="Filtrar por Estado"
-                  value={estadoFilter}
-                  onChange={(e) => setEstadoFilter(e.target.value)}
-                />
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Filtrar por Estado"
+                    value={estadoFilter}
+                    onChange={(e) => setEstadoFilter(e.target.value)}
+                  />
+                </Paper>
               </Grid>
             </Grid>
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -586,8 +611,8 @@ const RoutesComponent = () => {
         )}
       </Box>
 
-      <Dialog open={openAssignDialog} onClose={() => setOpenAssignDialog(false)}>
-        <DialogTitle>Asignar Vehículo</DialogTitle>
+      <Dialog open={openAssignDialog} onClose={() => setOpenAssignDialog(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 600 }}>Asignar Vehículo</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel>Seleccionar Placa</InputLabel>
@@ -605,13 +630,13 @@ const RoutesComponent = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenAssignDialog(false)}>Cancelar</Button>
-          <Button onClick={handleAssignSubmit} disabled={!selectedPlaca}>Asignar</Button>
+          <Button variant="outlined" onClick={() => setOpenAssignDialog(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleAssignSubmit} disabled={!selectedPlaca}>Asignar</Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={openCreateRouteDialog} onClose={() => setOpenCreateRouteDialog(false)}>
-        <DialogTitle>Crear Nueva Ruta</DialogTitle>
+      <Dialog open={openCreateRouteDialog} onClose={() => setOpenCreateRouteDialog(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 600 }}>Crear Nueva Ruta</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -658,13 +683,13 @@ const RoutesComponent = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenCreateRouteDialog(false)}>Cancelar</Button>
-          <Button onClick={handleSubmitRoute}>Crear</Button>
+          <Button variant="outlined" onClick={() => setOpenCreateRouteDialog(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSubmitRoute}>Crear</Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={openEditRouteDialog} onClose={() => setOpenEditRouteDialog(false)}>
-        <DialogTitle>Editar Ruta</DialogTitle>
+      <Dialog open={openEditRouteDialog} onClose={() => setOpenEditRouteDialog(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 600 }}>Editar Ruta</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -711,13 +736,13 @@ const RoutesComponent = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenEditRouteDialog(false)}>Cancelar</Button>
-          <Button onClick={handleSubmitRoute}>Actualizar</Button>
+          <Button variant="outlined" onClick={() => setOpenEditRouteDialog(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSubmitRoute}>Actualizar</Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={openUpdateStatusDialog} onClose={() => setOpenUpdateStatusDialog(false)}>
-        <DialogTitle>Actualizar Estado de Ruta</DialogTitle>
+      <Dialog open={openUpdateStatusDialog} onClose={() => setOpenUpdateStatusDialog(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 600 }}>Actualizar Estado de Ruta</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel>Estado</InputLabel>
@@ -734,13 +759,13 @@ const RoutesComponent = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenUpdateStatusDialog(false)}>Cancelar</Button>
-          <Button onClick={handleSubmitStatus}>Actualizar</Button>
+          <Button variant="outlined" onClick={() => setOpenUpdateStatusDialog(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSubmitStatus}>Actualizar</Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={openFuelDialog} onClose={() => setOpenFuelDialog(false)}>
-        <DialogTitle>Registrar Combustible</DialogTitle>
+      <Dialog open={openFuelDialog} onClose={() => setOpenFuelDialog(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 600 }}>Registrar Combustible</DialogTitle>
         <DialogContent>
           {fuelPlan && (
             <>
@@ -760,8 +785,8 @@ const RoutesComponent = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenFuelDialog(false)}>Cancelar</Button>
-          <Button onClick={handleSubmitFuel} disabled={!actualLiters}>Registrar</Button>
+          <Button variant="outlined" onClick={() => setOpenFuelDialog(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSubmitFuel} disabled={!actualLiters}>Registrar</Button>
         </DialogActions>
       </Dialog>
     </Box>

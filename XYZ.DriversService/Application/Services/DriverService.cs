@@ -1,8 +1,10 @@
+using Grpc.Net.Client;
 using XYZ.DriversService.Application.Interfaces;
 using XYZ.DriversService.Domain.Entities;
 using XYZ.DriversService.Domain.Enums;
 using XYZ.DriversService.Infrastructure.Repositories;
 using XYZ.DriversService.Shared.Dtos;
+using XYZ.VehiclesService.Protos;
 
 namespace XYZ.DriversService.Application.Services;
 
@@ -10,9 +12,18 @@ public class DriverService : IDriverService
 {
     private readonly DriverRepository _driverRepository;
 
-    public DriverService(DriverRepository driverRepository)
+    private readonly Vehicles.VehiclesClient _vehiclesClient;
+
+    public DriverService(IConfiguration configuration, DriverRepository driverRepository)
     {
         _driverRepository = driverRepository;
+
+        var vehiclesUrl =
+            configuration.GetValue<string>("Services:VehiclesService")
+            ?? "http://vehiclesservice:5002";
+
+        var channel = GrpcChannel.ForAddress(vehiclesUrl);
+        _vehiclesClient = new Vehicles.VehiclesClient(channel);
     }
 
     public async Task<DriverResponseDto?> GetDriverByIdAsync(int id)
@@ -24,32 +35,38 @@ public class DriverService : IDriverService
     public async Task<List<DriverResponseDto>> GetAllDriversAsync()
     {
         var drivers = await _driverRepository.GetAllAsync();
-        return drivers.Select(MapToDto).ToList();
+        return [.. drivers.Select(MapToDto)];
     }
 
     public async Task<List<DriverResponseDto>> GetAvailableDriversAsync()
     {
         var drivers = await _driverRepository.GetAvailableAsync();
-        return drivers.Select(MapToDto).ToList();
+        return [.. drivers.Select(MapToDto)];
     }
 
     public async Task<List<DriverResponseDto>> GetDriversByTypeAsync(DriverType driverType)
     {
         var drivers = await _driverRepository.GetByDriverTypeAsync(driverType);
-        return drivers.Select(MapToDto).ToList();
+        return [.. drivers.Select(MapToDto)];
     }
 
     public async Task<DriverResponseDto> CreateDriverAsync(CreateDriverRequestDto request)
     {
         // Validate unique constraints
         if (await _driverRepository.DocumentNumberExistsAsync(request.DocumentNumber))
-            throw new InvalidOperationException($"Driver with document number {request.DocumentNumber} already exists");
+            throw new InvalidOperationException(
+                $"Driver with document number {request.DocumentNumber} already exists"
+            );
 
         if (await _driverRepository.EmailExistsAsync(request.Email))
-            throw new InvalidOperationException($"Driver with email {request.Email} already exists");
+            throw new InvalidOperationException(
+                $"Driver with email {request.Email} already exists"
+            );
 
         if (await _driverRepository.LicenseNumberExistsAsync(request.LicenseNumber))
-            throw new InvalidOperationException($"Driver with license number {request.LicenseNumber} already exists");
+            throw new InvalidOperationException(
+                $"Driver with license number {request.LicenseNumber} already exists"
+            );
 
         // Validate license expiry date
         if (request.LicenseExpiryDate <= DateTime.UtcNow)
@@ -67,7 +84,7 @@ public class DriverService : IDriverService
             LicenseExpiryDate = request.LicenseExpiryDate,
             DriverType = request.DriverType,
             Status = DriverStatus.Active,
-            HireDate = request.HireDate
+            HireDate = request.HireDate,
         };
 
         var createdDriver = await _driverRepository.CreateAsync(driver);
@@ -82,10 +99,14 @@ public class DriverService : IDriverService
 
         // Validate unique constraints (excluding current driver)
         if (await _driverRepository.EmailExistsAsync(request.Email, id))
-            throw new InvalidOperationException($"Driver with email {request.Email} already exists");
+            throw new InvalidOperationException(
+                $"Driver with email {request.Email} already exists"
+            );
 
         if (await _driverRepository.LicenseNumberExistsAsync(request.LicenseNumber, id))
-            throw new InvalidOperationException($"Driver with license number {request.LicenseNumber} already exists");
+            throw new InvalidOperationException(
+                $"Driver with license number {request.LicenseNumber} already exists"
+            );
 
         // Validate license expiry date
         if (request.LicenseExpiryDate <= DateTime.UtcNow)
@@ -115,12 +136,15 @@ public class DriverService : IDriverService
         // If driver is assigned to a vehicle, try to clear the vehicle's assigned driver first
         if (driver.IsAssigned && !string.IsNullOrWhiteSpace(driver.AssignedVehiclePlaca))
         {
-            var vehiclesUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL") ?? "http://vehiclesservice:5002";
             try
             {
-                using var channel = Grpc.Net.Client.GrpcChannel.ForAddress(vehiclesUrl);
-                var vehiclesClient = new XYZ.VehiclesService.Protos.Vehicles.VehiclesClient(channel);
-                await vehiclesClient.SetAssignedDriverAsync(new XYZ.VehiclesService.Protos.SetAssignedDriverRequest { Placa = driver.AssignedVehiclePlaca, DriverDocument = "" });
+                await _vehiclesClient.SetAssignedDriverAsync(
+                    new SetAssignedDriverRequest
+                    {
+                        Placa = driver.AssignedVehiclePlaca,
+                        DriverDocument = "",
+                    }
+                );
             }
             catch
             {
@@ -149,15 +173,12 @@ public class DriverService : IDriverService
         if (driver.IsAssigned)
             throw new InvalidOperationException("Driver is already assigned to a vehicle");
 
-        // Verify vehicle exists and is not assigned to another driver
-        var vehiclesUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL") ?? "http://vehiclesservice:5002";
-        using var channel = Grpc.Net.Client.GrpcChannel.ForAddress(vehiclesUrl);
-        var vehiclesClient = new XYZ.VehiclesService.Protos.Vehicles.VehiclesClient(channel);
-
-        XYZ.VehiclesService.Protos.VehicleResponse vehicleResp;
+        VehicleResponse vehicleResp;
         try
         {
-            vehicleResp = await vehiclesClient.GetVehicleByPlacaAsync(new XYZ.VehiclesService.Protos.GetVehicleByPlacaRequest { Placa = vehiclePlaca });
+            vehicleResp = await _vehiclesClient.GetVehicleByPlacaAsync(
+                new GetVehicleByPlacaRequest { Placa = vehiclePlaca }
+            );
         }
         catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
         {
@@ -165,13 +186,22 @@ public class DriverService : IDriverService
         }
 
         // If vehicle is assigned to another driver, reject
-        if (!string.IsNullOrWhiteSpace(vehicleResp.AssignedDriverDocument) && vehicleResp.AssignedDriverDocument != driver.DocumentNumber)
+        if (
+            !string.IsNullOrWhiteSpace(vehicleResp.AssignedDriverDocument)
+            && vehicleResp.AssignedDriverDocument != driver.DocumentNumber
+        )
             throw new InvalidOperationException("Vehicle is already assigned to another driver");
 
         // Proceed: set vehicle assigned driver document and update driver
         try
         {
-            await vehiclesClient.SetAssignedDriverAsync(new XYZ.VehiclesService.Protos.SetAssignedDriverRequest { Placa = vehiclePlaca, DriverDocument = driver.DocumentNumber });
+            await _vehiclesClient.SetAssignedDriverAsync(
+                new SetAssignedDriverRequest
+                {
+                    Placa = vehiclePlaca,
+                    DriverDocument = driver.DocumentNumber,
+                }
+            );
         }
         catch (Exception ex)
         {
@@ -198,12 +228,15 @@ public class DriverService : IDriverService
         // Clear vehicle assigned document if vehicle exists
         if (!string.IsNullOrWhiteSpace(driver.AssignedVehiclePlaca))
         {
-            var vehiclesUrl = Environment.GetEnvironmentVariable("VEHICLES_SERVICE_URL") ?? "http://vehiclesservice:5002";
-            using var channel = Grpc.Net.Client.GrpcChannel.ForAddress(vehiclesUrl);
-            var vehiclesClient = new XYZ.VehiclesService.Protos.Vehicles.VehiclesClient(channel);
             try
             {
-                await vehiclesClient.SetAssignedDriverAsync(new XYZ.VehiclesService.Protos.SetAssignedDriverRequest { Placa = driver.AssignedVehiclePlaca, DriverDocument = "" });
+                await _vehiclesClient.SetAssignedDriverAsync(
+                    new SetAssignedDriverRequest
+                    {
+                        Placa = driver.AssignedVehiclePlaca,
+                        DriverDocument = "",
+                    }
+                );
             }
             catch
             {
@@ -244,7 +277,8 @@ public class DriverService : IDriverService
             UpdatedAt = driver.UpdatedAt,
             IsAssigned = driver.IsAssigned,
             AssignedVehiclePlaca = driver.AssignedVehiclePlaca,
-            AssignmentDate = driver.AssignmentDate
+            AssignmentDate = driver.AssignmentDate,
         };
     }
 }
+
