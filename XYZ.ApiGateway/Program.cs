@@ -16,7 +16,10 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy
-            .WithOrigins("http://localhost:3000")
+            .WithOrigins(
+                "http://localhost:3000",
+                "https://blue-sea-0af160610.3.azurestaticapps.net"
+            )
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials(); // Mantiene credenciales para JWT
