@@ -39,7 +39,7 @@ const Login = () => {
         <Paper elevation={0} sx={{ p: 5, width: '100%', border: (theme) => `1px solid ${theme.palette.divider}`, borderRadius: 3 }}>
           <Box sx={{ mb: 3, textAlign: 'center' }}>
             <Typography component="h1" variant="h4" sx={{ fontWeight: 700 }}>
-              Fuel System
+              FuelSense
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Inicia sesión para continuar

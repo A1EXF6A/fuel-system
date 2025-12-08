@@ -240,7 +240,7 @@ const Dashboard = () => {
        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
           <Toolbar>
             <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
-              Fuel System
+              FuelSense
             </Typography>
             <ThemeToggle />
             <IconButton color="inherit" onClick={logout}>
