@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy
-            .SetIsOriginAllowed(origin => true) // Permite cualquier origen
+            .WithOrigins("http://localhost:3000")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials(); // Mantiene credenciales para JWT
@@ -167,7 +167,7 @@ static int? ExtractPortFromUrl(string url)
                     return port;
             }
         }
-        
+
         var uri = new Uri(url);
         return uri.Port;
     }
@@ -198,4 +198,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
